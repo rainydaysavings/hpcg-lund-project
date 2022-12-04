@@ -1,0 +1,24 @@
+# Build folders
+build/
+Debug/
+Release/
+ipch/
+out/
+
+# Dependencies folder
+dependencies/
+
+# Resources folder
+res/
+res.zip
+
+# Application produced files
+imgui.ini
+log.txt
+
+# Visual Studio Files
+.vs/
+*.opensdf
+*.sdf
+*.suo
+*.vcxproj.user
