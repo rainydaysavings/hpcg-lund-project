@@ -22,10 +22,6 @@ in VS_OUT {
 
 void main()
 {
-	//vec3 tT = vec3(1, 0, 0);
-	//vec3 tB = vec3(0, 1, 0);
-	//mat3 testTBN = mat3(tT, tB, tN);
-
 	vec3 lp = vec3(0,0,10.5);
 	lp = vec3(light_position.x, light_position.x, light_position.z);
 	vec3 L = inverse(fs_in.TBN) * normalize(lp-fs_in.frag_pos);
@@ -87,13 +83,12 @@ void main()
 
 	// Self shadowing
 	
-	//numLayers = 64.0;
-	//layerDepth = 1.0/numLayers;
-	vec2 lightStep = ( L.xy / L.z ) * heightScale;
+	vec2 lightStep = ( L.yx / L.z ) * heightScale;
 	deltaUVs = lightStep / (numLayers*currentLayerDepth);
 	vec2 tempUVs = UVs;
 	float shadowFactor = 1;
 
+	// Hard self shadowing
 //	while(currentLayerDepth > 0){
 //		tempUVs -= deltaUVs;
 //		// to stop shadows from neighbouring texture tiles
@@ -111,9 +106,7 @@ void main()
 
 
 	// Soft self shadowing 
-
-
-	float initialDepth = 1.0 - texture2D(test_height_map, tempUVs-0.01*deltaUVs).r;
+	float initialDepth = 1.0 - texture2D(test_height_map, tempUVs).r;
 
 	float maxOcclusion = 0;
 	float maxOcclusionDepth = initialDepth;
@@ -128,9 +121,8 @@ void main()
 	}
 
 	float lightSourceWidth = 1.0;
-	float lightSourceDistance = length(lp)+initialDepth;
 	if(maxOcclusionDepth != initialDepth){
-		float penumbraWidth = lightSourceWidth*(initialDepth-maxOcclusionDepth)/(maxOcclusionDepth+lightSourceDistance);
+		float penumbraWidth = lightSourceWidth*(initialDepth-maxOcclusionDepth)/(maxOcclusionDepth+length(lp));
 		shadowFactor = max(min(1-penumbraWidth/(0.24+penumbraWidth), 1.0), 0.0);
 	}
 
