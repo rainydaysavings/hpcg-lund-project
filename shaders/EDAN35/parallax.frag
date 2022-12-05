@@ -43,7 +43,7 @@ void main()
 	const float minLayers = 8.0;
 	const float maxLayers = 64.0;
 	float numLayers = mix(maxLayers, minLayers, dot(N,V));
-	//numLayers = 800;
+	numLayers = 64;
 
 	// layerDepth is the depth of every ray step done in the while loop
 	float layerDepth = 1.0/numLayers;
@@ -86,7 +86,9 @@ void main()
 	
 
 	// Self shadowing
-
+	
+	//numLayers = 64.0;
+	//layerDepth = 1.0/numLayers;
 	vec2 lightStep = ( L.xy / L.z ) * heightScale;
 	deltaUVs = lightStep / (numLayers*currentLayerDepth);
 	vec2 tempUVs = UVs;
@@ -108,9 +110,10 @@ void main()
 
 
 
-	// Soft self shadowing TODO: FIX THIS SHIT VVVVVVVVVVVVV
+	// Soft self shadowing 
 
-	float initialDepth = 1.0 - texture2D(test_height_map, tempUVs-0.001*deltaUVs).r;
+
+	float initialDepth = 1.0 - texture2D(test_height_map, tempUVs-0.01*deltaUVs).r;
 
 	float maxOcclusion = 0;
 	float maxOcclusionDepth = initialDepth;
@@ -124,11 +127,11 @@ void main()
 		currentLayerDepth -= layerDepth;
 	}
 
-	float lightSourceWidth = 1;
-	float lightSourceDistance = lp.z;
+	float lightSourceWidth = 1.0;
+	float lightSourceDistance = length(lp)+initialDepth;
 	if(maxOcclusionDepth != initialDepth){
-		float penumbraWidth = lightSourceWidth*(initialDepth-maxOcclusionDepth)/maxOcclusionDepth;
-		shadowFactor = max(min(penumbraWidth, 1.0), 0.0);
+		float penumbraWidth = lightSourceWidth*(initialDepth-maxOcclusionDepth)/(maxOcclusionDepth+lightSourceDistance);
+		shadowFactor = max(min(1-penumbraWidth/(0.24+penumbraWidth), 1.0), 0.0);
 	}
 
 
