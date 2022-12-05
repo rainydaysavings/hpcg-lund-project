@@ -1,9 +1,11 @@
 #include "assignment5.hpp"
+#include <EDAF80/parametric_shapes.cpp>
 
 #include "config.hpp"
 #include "core/Bonobo.h"
 #include "core/FPSCamera.h"
 #include "core/helpers.hpp"
+#include "core/node.hpp"
 #include "core/ShaderProgramManager.hpp"
 
 #include <imgui.h>
@@ -12,13 +14,20 @@
 #include <clocale>
 #include <stdexcept>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include <cstdlib>
+
+
 edaf80::Assignment5::Assignment5(WindowManager& windowManager) :
 	mCamera(0.5f * glm::half_pi<float>(),
-	        static_cast<float>(config::resolution_x) / static_cast<float>(config::resolution_y),
-	        0.01f, 1000.0f),
+		static_cast<float>(config::resolution_x) / static_cast<float>(config::resolution_y),
+		0.01f, 1000.0f),
 	inputHandler(), mWindowManager(windowManager), window(nullptr)
 {
-	WindowManager::WindowDatum window_datum{ inputHandler, mCamera, config::resolution_x, config::resolution_y, 0, 0, 0, 0};
+	WindowManager::WindowDatum window_datum{ inputHandler, mCamera, config::resolution_x, config::resolution_y, 0, 0, 0, 0 };
 
 	window = mWindowManager.CreateGLFWWindow("EDAF80: Assignment 5", window_datum, config::msaa_rate);
 	if (window == nullptr) {
@@ -45,11 +54,21 @@ edaf80::Assignment5::run()
 	ShaderProgramManager program_manager;
 	GLuint fallback_shader = 0u;
 	program_manager.CreateAndRegisterProgram("Fallback",
-	                                         { { ShaderType::vertex, "common/fallback.vert" },
-	                                           { ShaderType::fragment, "common/fallback.frag" } },
-	                                         fallback_shader);
+		{ { ShaderType::vertex, "common/fallback.vert" },
+		  { ShaderType::fragment, "common/fallback.frag" } },
+		fallback_shader);
 	if (fallback_shader == 0u) {
 		LogError("Failed to load fallback shader");
+		return;
+	}
+
+	GLuint parallax_shader = 0u;
+	program_manager.CreateAndRegisterProgram("parallax",
+		{ { ShaderType::vertex, "EDAN35/parallax.vert" },
+		  { ShaderType::fragment, "EDAN35/parallax.frag" } },
+		parallax_shader);
+	if (parallax_shader == 0u) {
+		LogError("Failed to load parallax shader");
 		return;
 	}
 
@@ -58,9 +77,31 @@ edaf80::Assignment5::run()
 	//       (Check how it was done in assignment 3.)
 	//
 
+	auto test_height_map = bonobo::loadTexture2D(config::resources_path("project/Parallax_Occlusion_test_heightraw.png"));
+	auto test_color_map = bonobo::loadTexture2D(config::resources_path("project/Parallax_Occlusion_test_Color.png"));
+	auto test_normal_map = bonobo::loadTexture2D(config::resources_path("project/Parallax_Occlusion_test_normal.png"));
+
+
 	//
 	// Todo: Load your geometry
 	//
+	auto camera_position = mCamera.mWorld.GetTranslation();
+	auto light_position = glm::vec3(2.0f, -4.0f, -2.0f);
+	auto const set_uniforms = [&light_position, &camera_position](GLuint program) {
+		glUniform3fv(glGetUniformLocation(program, "light_position"), 1, glm::value_ptr(light_position));
+		glUniform3fv(glGetUniformLocation(program, "camera_position"), 1, glm::value_ptr(camera_position));
+	};
+	auto wall_shape = parametric_shapes::createQuad(10.0f, 10.0f, 0, 0);
+	Node wall;
+	wall.set_geometry(wall_shape);
+	wall.set_program(&parallax_shader, set_uniforms);
+	wall.add_texture("test_height_map", test_height_map, GL_TEXTURE_2D);
+	wall.add_texture("test_color_map", test_color_map, GL_TEXTURE_2D);
+	wall.add_texture("test_normal_map", test_normal_map, GL_TEXTURE_2D);
+
+	glm::mat4 wallTransform = wall.get_transform().GetMatrix();
+	wallTransform = glm::rotate(wallTransform, -glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
 
 	glClearDepthf(1.0f);
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -75,6 +116,10 @@ edaf80::Assignment5::run()
 	bool show_basis = false;
 	float basis_thickness_scale = 1.0f;
 	float basis_length_scale = 1.0f;
+
+	float lightposX = 0.0f;
+	float lightposY = 0.0f;
+	float lightposZ = 0.0f;
 
 	while (!glfwWindowShouldClose(window)) {
 		auto const nowTime = std::chrono::high_resolution_clock::now();
@@ -92,9 +137,9 @@ edaf80::Assignment5::run()
 			shader_reload_failed = !program_manager.ReloadAllPrograms();
 			if (shader_reload_failed)
 				tinyfd_notifyPopup("Shader Program Reload Error",
-				                   "An error occurred while reloading shader programs; see the logs for details.\n"
-				                   "Rendering is suspended until the issue is solved. Once fixed, just reload the shaders again.",
-				                   "error");
+					"An error occurred while reloading shader programs; see the logs for details.\n"
+					"Rendering is suspended until the issue is solved. Once fixed, just reload the shaders again.",
+					"error");
 		}
 		if (inputHandler.GetKeycodeState(GLFW_KEY_F3) & JUST_RELEASED)
 			show_logs = !show_logs;
@@ -120,6 +165,9 @@ edaf80::Assignment5::run()
 		// Todo: If you need to handle inputs, you can do it here
 		//
 
+		light_position = glm::vec3(lightposX, lightposY, lightposZ);
+
+		camera_position = mCamera.mWorld.GetTranslation();
 
 		mWindowManager.NewImGuiFrame();
 
@@ -130,6 +178,7 @@ edaf80::Assignment5::run()
 			//
 			// Todo: Render all your geometry here.
 			//
+			wall.render(mCamera.GetWorldToClipMatrix(), wallTransform);
 		}
 
 
@@ -144,6 +193,9 @@ edaf80::Assignment5::run()
 			ImGui::Checkbox("Show basis", &show_basis);
 			ImGui::SliderFloat("Basis thickness scale", &basis_thickness_scale, 0.0f, 100.0f);
 			ImGui::SliderFloat("Basis length scale", &basis_length_scale, 0.0f, 100.0f);
+			ImGui::SliderFloat("lightposX", &lightposX, 0.0f, 10.0f);
+			ImGui::SliderFloat("lightposY", &lightposY, 0.0f, 10.0f);
+			ImGui::SliderFloat("lightposZ", &lightposZ, 0.0f, 10.0f);
 		}
 		ImGui::End();
 
@@ -166,7 +218,8 @@ int main()
 	try {
 		edaf80::Assignment5 assignment5(framework.GetWindowManager());
 		assignment5.run();
-	} catch (std::runtime_error const& e) {
+	}
+	catch (std::runtime_error const& e) {
 		LogError(e.what());
 	}
 }
