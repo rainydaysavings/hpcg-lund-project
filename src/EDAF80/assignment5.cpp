@@ -1,9 +1,11 @@
 #include "assignment5.hpp"
+#include <EDAF80/parametric_shapes.cpp>
 
 #include "config.hpp"
 #include "core/Bonobo.h"
 #include "core/FPSCamera.h"
 #include "core/helpers.hpp"
+#include "core/node.hpp"
 #include "core/ShaderProgramManager.hpp"
 
 #include <imgui.h>
@@ -11,6 +13,13 @@
 
 #include <clocale>
 #include <stdexcept>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include <cstdlib>
+
 
 edaf80::Assignment5::Assignment5(WindowManager& windowManager) :
 	mCamera(0.5f * glm::half_pi<float>(),
@@ -53,14 +62,46 @@ edaf80::Assignment5::run()
 		return;
 	}
 
+	GLuint parallax_shader = 0u;
+	program_manager.CreateAndRegisterProgram("parallax",
+											{ { ShaderType::vertex, "EDAN35/parallax.vert" },
+											  { ShaderType::fragment, "EDAN35/parallax.frag" } },
+											parallax_shader);
+	if (parallax_shader == 0u) {
+		LogError("Failed to load parallax shader");
+		return;
+	}
+
 	//
 	// Todo: Insert the creation of other shader programs.
 	//       (Check how it was done in assignment 3.)
 	//
 
+	auto test_height_map = bonobo::loadTexture2D(config::resources_path("project/Parallax_Occlusion_test_heightraw.png"));
+	auto test_color_map = bonobo::loadTexture2D(config::resources_path("project/Parallax_Occlusion_test_Color.png"));
+	auto test_normal_map = bonobo::loadTexture2D(config::resources_path("project/Parallax_Occlusion_test_normal.png"));
+
+
 	//
 	// Todo: Load your geometry
 	//
+	auto camera_position = mCamera.mWorld.GetTranslation();
+	auto light_position = glm::vec3(2.0f, -4.0f, -2.0f);
+	auto const set_uniforms = [&light_position, &camera_position](GLuint program) {
+		glUniform3fv(glGetUniformLocation(program, "light_position"), 1, glm::value_ptr(light_position));
+		glUniform3fv(glGetUniformLocation(program, "camera_position"), 1, glm::value_ptr(camera_position));
+	};
+	auto wall_shape = parametric_shapes::createQuad(10.0f, 10.0f, 0, 0);
+	Node wall;
+	wall.set_geometry(wall_shape);
+	wall.set_program(&parallax_shader, set_uniforms);
+	wall.add_texture("test_height_map", test_height_map, GL_TEXTURE_2D);
+	wall.add_texture("test_color_map", test_color_map, GL_TEXTURE_2D);
+	wall.add_texture("test_normal_map", test_normal_map, GL_TEXTURE_2D);
+
+	glm::mat4 wallTransform = wall.get_transform().GetMatrix();
+	wallTransform = glm::rotate(wallTransform, -glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
 
 	glClearDepthf(1.0f);
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -75,6 +116,10 @@ edaf80::Assignment5::run()
 	bool show_basis = false;
 	float basis_thickness_scale = 1.0f;
 	float basis_length_scale = 1.0f;
+
+	float lightposX = 0.0f;
+	float lightposY = 0.0f;
+	float lightposZ = 0.0f;
 
 	while (!glfwWindowShouldClose(window)) {
 		auto const nowTime = std::chrono::high_resolution_clock::now();
@@ -120,6 +165,9 @@ edaf80::Assignment5::run()
 		// Todo: If you need to handle inputs, you can do it here
 		//
 
+		light_position = glm::vec3(lightposX, lightposY, lightposZ);
+
+		camera_position = mCamera.mWorld.GetTranslation();
 
 		mWindowManager.NewImGuiFrame();
 
@@ -130,6 +178,7 @@ edaf80::Assignment5::run()
 			//
 			// Todo: Render all your geometry here.
 			//
+			wall.render(mCamera.GetWorldToClipMatrix(), wallTransform);
 		}
 
 
@@ -144,6 +193,9 @@ edaf80::Assignment5::run()
 			ImGui::Checkbox("Show basis", &show_basis);
 			ImGui::SliderFloat("Basis thickness scale", &basis_thickness_scale, 0.0f, 100.0f);
 			ImGui::SliderFloat("Basis length scale", &basis_length_scale, 0.0f, 100.0f);
+			ImGui::SliderFloat("lightposX", &lightposX, 0.0f, 10.0f);
+			ImGui::SliderFloat("lightposY", &lightposY, 0.0f, 10.0f);
+			ImGui::SliderFloat("lightposZ", &lightposZ, 0.0f, 10.0f);
 		}
 		ImGui::End();
 
