@@ -23,11 +23,11 @@
 
 edaf80::Assignment5::Assignment5(WindowManager& windowManager) :
 	mCamera(0.5f * glm::half_pi<float>(),
-	        static_cast<float>(config::resolution_x) / static_cast<float>(config::resolution_y),
-	        0.01f, 1000.0f),
+		static_cast<float>(config::resolution_x) / static_cast<float>(config::resolution_y),
+		0.01f, 1000.0f),
 	inputHandler(), mWindowManager(windowManager), window(nullptr)
 {
-	WindowManager::WindowDatum window_datum{ inputHandler, mCamera, config::resolution_x, config::resolution_y, 0, 0, 0, 0};
+	WindowManager::WindowDatum window_datum{ inputHandler, mCamera, config::resolution_x, config::resolution_y, 0, 0, 0, 0 };
 
 	window = mWindowManager.CreateGLFWWindow("EDAF80: Assignment 5", window_datum, config::msaa_rate);
 	if (window == nullptr) {
@@ -54,9 +54,9 @@ edaf80::Assignment5::run()
 	ShaderProgramManager program_manager;
 	GLuint fallback_shader = 0u;
 	program_manager.CreateAndRegisterProgram("Fallback",
-	                                         { { ShaderType::vertex, "common/fallback.vert" },
-	                                           { ShaderType::fragment, "common/fallback.frag" } },
-	                                         fallback_shader);
+		{ { ShaderType::vertex, "common/fallback.vert" },
+		  { ShaderType::fragment, "common/fallback.frag" } },
+		fallback_shader);
 	if (fallback_shader == 0u) {
 		LogError("Failed to load fallback shader");
 		return;
@@ -64,9 +64,9 @@ edaf80::Assignment5::run()
 
 	GLuint parallax_shader = 0u;
 	program_manager.CreateAndRegisterProgram("parallax",
-											{ { ShaderType::vertex, "EDAN35/parallax.vert" },
-											  { ShaderType::fragment, "EDAN35/parallax.frag" } },
-											parallax_shader);
+		{ { ShaderType::vertex, "EDAN35/parallax.vert" },
+		  { ShaderType::fragment, "EDAN35/parallax.frag" } },
+		parallax_shader);
 	if (parallax_shader == 0u) {
 		LogError("Failed to load parallax shader");
 		return;
@@ -137,9 +137,9 @@ edaf80::Assignment5::run()
 			shader_reload_failed = !program_manager.ReloadAllPrograms();
 			if (shader_reload_failed)
 				tinyfd_notifyPopup("Shader Program Reload Error",
-				                   "An error occurred while reloading shader programs; see the logs for details.\n"
-				                   "Rendering is suspended until the issue is solved. Once fixed, just reload the shaders again.",
-				                   "error");
+					"An error occurred while reloading shader programs; see the logs for details.\n"
+					"Rendering is suspended until the issue is solved. Once fixed, just reload the shaders again.",
+					"error");
 		}
 		if (inputHandler.GetKeycodeState(GLFW_KEY_F3) & JUST_RELEASED)
 			show_logs = !show_logs;
@@ -218,7 +218,8 @@ int main()
 	try {
 		edaf80::Assignment5 assignment5(framework.GetWindowManager());
 		assignment5.run();
-	} catch (std::runtime_error const& e) {
+	}
+	catch (std::runtime_error const& e) {
 		LogError(e.what());
 	}
 }

@@ -25,7 +25,7 @@ parametric_shapes::createQuad(float const width, float const height,
 	auto binormals = std::vector<glm::vec3>(vertices_nb);
 	auto tangents = std::vector<glm::vec3>(vertices_nb);
 	auto texcoords = std::vector<glm::vec3>(vertices_nb);
-	
+
 
 	size_t index = 0u;
 	// for all vertical vertices
@@ -112,7 +112,7 @@ parametric_shapes::createQuad(float const width, float const height,
 	auto const tangents_size = static_cast<GLsizeiptr>(tangents.size() * sizeof(glm::vec3));
 	auto const binormals_offset = tangents_offset + tangents_size;
 	auto const binormals_size = static_cast<GLsizeiptr>(binormals.size() * sizeof(glm::vec3));
-	
+
 
 	auto const bo_size = static_cast<GLsizeiptr>(vertices_size
 		+ texcoords_size
@@ -145,7 +145,7 @@ parametric_shapes::createQuad(float const width, float const height,
 	glEnableVertexAttribArray(static_cast<unsigned int>(bonobo::shader_bindings::binormals));
 	glVertexAttribPointer(static_cast<unsigned int>(bonobo::shader_bindings::binormals), 3, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<GLvoid const*>(binormals_offset));
 
-	
+
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0u);
 
