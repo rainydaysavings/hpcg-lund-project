@@ -87,9 +87,15 @@ edaf80::Assignment5::run()
 	//
 	auto camera_position = mCamera.mWorld.GetTranslation();
 	auto light_position = glm::vec3(2.0f, -4.0f, -2.0f);
-	auto const set_uniforms = [&light_position, &camera_position](GLuint program) {
+	bool use_POM = false;
+	bool use_hard = false;
+	bool use_soft = false;
+	auto const set_uniforms = [&light_position, &camera_position, &use_POM, &use_hard, &use_soft](GLuint program) {
 		glUniform3fv(glGetUniformLocation(program, "light_position"), 1, glm::value_ptr(light_position));
 		glUniform3fv(glGetUniformLocation(program, "camera_position"), 1, glm::value_ptr(camera_position));
+		glUniform1i(glGetUniformLocation(program, "use_POM"), use_POM ? 1 : 0);
+		glUniform1i(glGetUniformLocation(program, "use_hard"), use_hard ? 1 : 0);
+		glUniform1i(glGetUniformLocation(program, "use_soft"), use_soft ? 1 : 0);
 	};
 	auto wall_shape = parametric_shapes::createQuad(10.0f, 10.0f, 0, 0);
 	Node wall;
@@ -114,7 +120,7 @@ edaf80::Assignment5::run()
 	bool show_gui = true;
 	bool shader_reload_failed = false;
 	bool show_basis = false;
-	float basis_thickness_scale = 1.0f;
+	float basis_thickness_scale = 0.5f;
 	float basis_length_scale = 1.0f;
 
 	float lightposX = 0.0f;
@@ -191,11 +197,15 @@ edaf80::Assignment5::run()
 		bool const opened = ImGui::Begin("Scene Controls", nullptr, ImGuiWindowFlags_None);
 		if (opened) {
 			ImGui::Checkbox("Show basis", &show_basis);
-			ImGui::SliderFloat("Basis thickness scale", &basis_thickness_scale, 0.0f, 100.0f);
-			ImGui::SliderFloat("Basis length scale", &basis_length_scale, 0.0f, 100.0f);
+			//ImGui::SliderFloat("Basis thickness scale", &basis_thickness_scale, 0.0f, 100.0f);
+			//ImGui::SliderFloat("Basis length scale", &basis_length_scale, 0.0f, 100.0f);
 			ImGui::SliderFloat("lightposX", &lightposX, 0.0f, 10.0f);
 			ImGui::SliderFloat("lightposY", &lightposY, 0.0f, 10.0f);
 			ImGui::SliderFloat("lightposZ", &lightposZ, 0.0f, 10.0f);
+			ImGui::Checkbox("Use Parallax Occlusion Mapping", &use_POM);
+			ImGui::Checkbox("Use Hard Shadows", &use_hard);
+			ImGui::Checkbox("Use Soft Shadows", &use_soft);
+			
 		}
 		ImGui::End();
 
