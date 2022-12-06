@@ -7,6 +7,10 @@ uniform sampler2D test_color_map;
 uniform sampler2D test_height_map;
 uniform sampler2D test_normal_map;
 
+uniform sampler2D color_map;
+uniform sampler2D height_map;
+uniform sampler2D normal_map;
+
 uniform vec3 camera_position;
 uniform vec3 light_position;
 
@@ -45,7 +49,7 @@ void main()
 		const float minLayers = 8.0;
 		const float maxLayers = 64.0;
 		float numLayers = mix(maxLayers, minLayers, dot(N,V));
-		//numLayers = 8;
+		numLayers = 64;
 
 		// layerDepth is the depth of every ray step done in the while loop
 		float layerDepth = 1.0/numLayers;
@@ -59,12 +63,12 @@ void main()
 		
 
 		// read surface texcoord texel depth. Depth is the inverse of height
-		float currentDepthMapValue = 1.0 - texture2D(test_height_map, UVs).r;
+		float currentDepthMapValue = 1.0 - texture2D(height_map, UVs).r;
 
 		// while loop iterates in the direction of deltaUVs, and steps down a depth layer value each loop
 		while(currentLayerDepth < currentDepthMapValue){
 			UVs -= deltaUVs;
-			currentDepthMapValue = 1.0 - texture2D(test_height_map, UVs).r;
+			currentDepthMapValue = 1.0 - texture2D(height_map, UVs).r;
 			currentLayerDepth += layerDepth;
 		}
 
@@ -74,7 +78,7 @@ void main()
 		// afterDepth is the distance between the after collision layer depth and the actual depth value from the heightmap
 		float afterDepth = currentDepthMapValue - currentLayerDepth;
 		// beforeDepth is the distance between the before collision layer depth and the actual depth value from the heightmap using the prevTexCoords
-		float beforeDepth = 1.0 - texture2D(test_height_map, prevTexCoords).r - currentLayerDepth + layerDepth;
+		float beforeDepth = 1.0 - texture2D(height_map, prevTexCoords).r - currentLayerDepth + layerDepth;
 		// weight is the value used to interpolate between the texture coordinates before and after collision, to approximate the precise hit location
 		float weight = afterDepth / (afterDepth - beforeDepth);
 		UVs = prevTexCoords * weight + UVs * (1.0 - weight);
@@ -91,10 +95,11 @@ void main()
 		// shadow layer resolution independent from POM layer resolution. Determined by distance from camera and angle to lightsource
 		float shadowNumLayers = mix(16.0, 180.0, 1-length(camera_position-fs_in.frag_pos)/(3+length(camera_position-fs_in.frag_pos)));
 		shadowNumLayers = mix(shadowNumLayers, 4.0, dot(L,N));
+		shadowNumLayers = 80.0;
 
 		float shadowLayerDepth = 1.0/shadowNumLayers;
 		vec2 lightStep = ( L.yx / L.z ) * heightScale;
-		float initialDepth = 1.0 - texture2D(test_height_map, UVs).r;
+		float initialDepth = 1.0 - texture2D(height_map, UVs).r;
 		currentLayerDepth = initialDepth;
 		deltaUVs = lightStep / (shadowNumLayers *currentLayerDepth);
 		vec2 tempUVs = UVs;
@@ -108,7 +113,7 @@ void main()
 				if(tempUVs.x > 1.0 || tempUVs.y > 1.0 || tempUVs.x < 0.0 || tempUVs.y < 0.0){
 					break;
 				}
-				currentDepthMapValue = 1.0 - texture2D(test_height_map, tempUVs).r;
+				currentDepthMapValue = 1.0 - texture2D(height_map, tempUVs).r;
 				currentLayerDepth -= layerDepth;
 				if(currentLayerDepth > currentDepthMapValue){
 					shadowFactor = 0.2;
@@ -132,7 +137,7 @@ void main()
 					if(tempUVs.x > 1.0 || tempUVs.y > 1.0 || tempUVs.x < 0.0 || tempUVs.y < 0.0){
 						break;
 					}
-					float occlusionDepth = 1 - texture2D(test_height_map, tempUVs).r;
+					float occlusionDepth = 1 - texture2D(height_map, tempUVs).r;
 					if(maxOcclusion < (currentLayerDepth - occlusionDepth) && occlusionDepth < currentLayerDepth){
 						maxOcclusion = currentLayerDepth - occlusionDepth;
 						maxOcclusionDepth = occlusionDepth;
@@ -151,14 +156,14 @@ void main()
 	}
 	//phong shading
 
-	N = normalize(normal_model_to_world * vec4(fs_in.TBN * (texture2D(test_normal_map, UVs).rgb * 2 - 1), 1.0)).rgb;
+	N = normalize(normal_model_to_world * vec4(fs_in.TBN * (texture2D(normal_map, UVs).rgb * 2 - 1), 1.0)).rgb;
 	N = vec3(-N.r, -N.b, N.g);
 
 	vec3 R = normalize(reflect(L,N));
 
 	vec3 ambient = vec3(0.2, 0.2, 0.2);
 
-	vec4 diffuseTexture = texture2D(test_color_map, UVs);
+	vec4 diffuseTexture = texture2D(color_map, UVs);
 	vec3 diffuse = max(dot(L,N), 0.0) * diffuseTexture.rgb * shadowFactor;
 
 	vec3 specColor = vec3(1.0, 1.0, 1.0);
@@ -166,6 +171,6 @@ void main()
 	vec3 specular = specColor * pow(max(dot(R,-V), 0.0), shininess);
 
 	
-	frag_color = vec4(ambient + diffuse + specular, 1.0);
+	frag_color = vec4(diffuse + specular, 1.0);
 	//frag_color = vec4(N,1.0);
 	}

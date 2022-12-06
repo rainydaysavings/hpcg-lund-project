@@ -81,6 +81,10 @@ edaf80::Assignment5::run()
 	auto test_color_map = bonobo::loadTexture2D(config::resources_path("project/Parallax_Occlusion_test_Color.png"));
 	auto test_normal_map = bonobo::loadTexture2D(config::resources_path("project/Parallax_Occlusion_test_normal.png"));
 
+	auto height_map = bonobo::loadTexture2D(config::resources_path("project/height.png"));
+	auto color_map = bonobo::loadTexture2D(config::resources_path("project/wall_albedo.png"));
+	auto normal_map = bonobo::loadTexture2D(config::resources_path("project/normal.png"));
+
 
 	//
 	// Todo: Load your geometry
@@ -104,6 +108,10 @@ edaf80::Assignment5::run()
 	wall.add_texture("test_height_map", test_height_map, GL_TEXTURE_2D);
 	wall.add_texture("test_color_map", test_color_map, GL_TEXTURE_2D);
 	wall.add_texture("test_normal_map", test_normal_map, GL_TEXTURE_2D);
+
+	wall.add_texture("height_map", height_map, GL_TEXTURE_2D);
+	wall.add_texture("color_map", color_map, GL_TEXTURE_2D);
+	wall.add_texture("normal_map", normal_map, GL_TEXTURE_2D);
 
 	glm::mat4 wallTransform = wall.get_transform().GetMatrix();
 	wallTransform = glm::rotate(wallTransform, -glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
