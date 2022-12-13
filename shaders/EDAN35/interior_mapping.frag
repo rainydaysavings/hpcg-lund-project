@@ -44,8 +44,6 @@ in VS_OUT {
 //floor = 5
 vec2 POM(vec2 texcoords, vec3 N, vec3 V, float heightScale, int wallIdx){
 
-
-
 	// Different amount of depth layers depending on view angle (Optimmization)
 	const float minLayers = 8.0;
 	const float maxLayers = 64.0;
@@ -206,9 +204,7 @@ void main()
 						  0, 0, 1, 0,
 						  0, -1, 0, 0,
 						  0, 0, 0, 1)*vec4(V, 1.0)).xyz;
-
 				diffuse_color = texture(right_wall_color, POM(texcoords / ROOM_SIZE, vec3(-1,0,0), V, 0.1, 2)).rgb;
-
 			} else {
 				V = (mat4(1, 0, 0, 0,
 						  0, 0, -1, 0,
@@ -216,7 +212,6 @@ void main()
 						  0, 0, 0, 1)*vec4(V, 1.0)).xyz;
 
 				diffuse_color = texture(left_wall_color, POM(texcoords / ROOM_SIZE, vec3(1,0,0), V, 0.1, 1)).rgb;
-
 			}
 
 			normal =  mix(
