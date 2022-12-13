@@ -22,3 +22,6 @@ log.txt
 *.sdf
 *.suo
 *.vcxproj.user
+
+# Kdevelop files
+*kdev4

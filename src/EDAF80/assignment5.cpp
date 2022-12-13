@@ -10,14 +10,11 @@
 
 #include <imgui.h>
 #include <tinyfiledialogs.h>
-
 #include <clocale>
 #include <stdexcept>
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
 #include <cstdlib>
 
 
@@ -28,7 +25,6 @@ edaf80::Assignment5::Assignment5(WindowManager& windowManager) :
 	inputHandler(), mWindowManager(windowManager), window(nullptr)
 {
 	WindowManager::WindowDatum window_datum{ inputHandler, mCamera, config::resolution_x, config::resolution_y, 0, 0, 0, 0 };
-
 	window = mWindowManager.CreateGLFWWindow("EDAF80: Assignment 5", window_datum, config::msaa_rate);
 	if (window == nullptr) {
 		throw std::runtime_error("Failed to get a window: aborting!");
@@ -72,7 +68,10 @@ edaf80::Assignment5::run()
 		return;
 	}
 
-	//following does nothing, I don't know why
+	//
+	// Todo: Insert the creation of other shader programs.
+	//       (Check how it was done in assignment 3.)
+	//
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 
@@ -108,8 +107,21 @@ edaf80::Assignment5::run()
 	auto window_normal_map = bonobo::loadTexture2D(config::resources_path("project/window/window_normal.png"));
 	auto window_opacity_map = bonobo::loadTexture2D(config::resources_path("project/window/window_opacity.png"));
 
-	
 
+
+
+
+
+	//
+	// Todo: Load your geometry
+	//
+	auto back_wall 			= bonobo::loadTexture2D(config::resources_path("project/blue_back.jpg"));
+	auto left_wall 			= bonobo::loadTexture2D(config::resources_path("project/red_left.jpg"));
+	auto right_wall 		= bonobo::loadTexture2D(config::resources_path("project/red_right.jpg"));
+	auto floor_wall 		= bonobo::loadTexture2D(config::resources_path("project/green_floor.jpg"));
+	auto ceil_wall 			= bonobo::loadTexture2D(config::resources_path("project/green_ceil.jpg"));
+
+	// Setting camera and light positions
 	auto camera_position = mCamera.mWorld.GetTranslation();
 	auto light_position = glm::vec3(2.0f, -4.0f, -2.0f);
 	bool use_POM = false;
@@ -122,6 +134,8 @@ edaf80::Assignment5::run()
 		glUniform1i(glGetUniformLocation(program, "use_hard"), use_hard ? 1 : 0);
 		glUniform1i(glGetUniformLocation(program, "use_soft"), use_soft ? 1 : 0);
 	};
+
+	// Setting wall geometry, shader and textures
 	auto wall_shape = parametric_shapes::createQuad(10.0f, 10.0f, 0, 0);
 	Node wall;
 	wall.set_geometry(wall_shape);
@@ -135,28 +149,30 @@ edaf80::Assignment5::run()
 	wall.add_texture("normal_map", wall3_normal_map, GL_TEXTURE_2D);
 	wall.add_texture("opacity_map", window_opacity_map, GL_TEXTURE_2D);
 
+	//wall.set_program(&interior_mapping_shader, 	set_uniforms);
+	//wall.add_texture("back_wall", 	back_wall, 	GL_TEXTURE_2D);
+	//wall.add_texture("left_wall", 	left_wall,	GL_TEXTURE_2D);
+	//wall.add_texture("right_wall", 	right_wall, GL_TEXTURE_2D);
+	//wall.add_texture("floor_wall", 	floor_wall, GL_TEXTURE_2D);
+	//wall.add_texture("ceil_wall", 	ceil_wall, 	GL_TEXTURE_2D);
+
 	glm::mat4 wallTransform = wall.get_transform().GetMatrix();
 	wallTransform = glm::rotate(wallTransform, -glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-
 
 	glClearDepthf(1.0f);
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
 
-
 	auto lastTime = std::chrono::high_resolution_clock::now();
-
 	bool show_logs = true;
 	bool show_gui = true;
 	bool shader_reload_failed = false;
 	bool show_basis = false;
 	float basis_thickness_scale = 0.5f;
 	float basis_length_scale = 1.0f;
-
 	float lightposX = 0.0f;
 	float lightposY = 0.0f;
 	float lightposZ = 0.0f;
-
 	while (!glfwWindowShouldClose(window)) {
 		auto const nowTime = std::chrono::high_resolution_clock::now();
 		auto const deltaTimeUs = std::chrono::duration_cast<std::chrono::microseconds>(nowTime - lastTime);
@@ -184,7 +200,6 @@ edaf80::Assignment5::run()
 		if (inputHandler.GetKeycodeState(GLFW_KEY_F11) & JUST_RELEASED)
 			mWindowManager.ToggleFullscreenStatusForWindow(window);
 
-
 		// Retrieve the actual framebuffer size: for HiDPI monitors,
 		// you might end up with a framebuffer larger than what you
 		// actually asked for. For example, if you ask for a 1920x1080
@@ -196,19 +211,13 @@ edaf80::Assignment5::run()
 		glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
 		glViewport(0, 0, framebuffer_width, framebuffer_height);
 
-
 		//
 		// Todo: If you need to handle inputs, you can do it here
 		//
-
 		light_position = glm::vec3(lightposX, lightposY, lightposZ);
-
 		camera_position = mCamera.mWorld.GetTranslation();
-
 		mWindowManager.NewImGuiFrame();
-
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-
 
 		if (!shader_reload_failed) {
 			//
@@ -216,7 +225,6 @@ edaf80::Assignment5::run()
 			//
 			wall.render(mCamera.GetWorldToClipMatrix(), wallTransform);
 		}
-
 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
@@ -235,10 +243,9 @@ edaf80::Assignment5::run()
 			ImGui::Checkbox("Use Parallax Occlusion Mapping", &use_POM);
 			ImGui::Checkbox("Use Hard Shadows", &use_hard);
 			ImGui::Checkbox("Use Soft Shadows", &use_soft);
-			
+
 		}
 		ImGui::End();
-
 		if (show_basis)
 			bonobo::renderBasis(basis_thickness_scale, basis_length_scale, mCamera.GetWorldToClipMatrix());
 		if (show_logs)
@@ -263,3 +270,4 @@ int main()
 		LogError(e.what());
 	}
 }
+
