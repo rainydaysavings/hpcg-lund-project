@@ -86,7 +86,6 @@ edaf80::Assignment5::run()
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 
 	//load all textures
-
 	auto test_height_map = bonobo::loadTexture2D(config::resources_path("project/Parallax_Occlusion_test_heightraw.png"));
 	auto test_color_map = bonobo::loadTexture2D(config::resources_path("project/Parallax_Occlusion_test_Color.png"));
 	auto test_normal_map = bonobo::loadTexture2D(config::resources_path("project/Parallax_Occlusion_test_normal.png"));
@@ -116,20 +115,6 @@ edaf80::Assignment5::run()
 	auto window_color_map = bonobo::loadTexture2D(config::resources_path("project/window/window_albedo.png"));
 	auto window_normal_map = bonobo::loadTexture2D(config::resources_path("project/window/window_normal.png"));
 	auto window_opacity_map = bonobo::loadTexture2D(config::resources_path("project/window/window_opacity.png"));
-
-
-
-
-
-
-	//
-	// Todo: Load your geometry
-	//
-	/*auto back_wall 			= bonobo::loadTexture2D(config::resources_path("project/blue_back.jpg"));
-	auto left_wall 			= bonobo::loadTexture2D(config::resources_path("project/red_left.jpg"));
-	auto right_wall 		= bonobo::loadTexture2D(config::resources_path("project/red_right.jpg"));
-	auto floor_wall 		= bonobo::loadTexture2D(config::resources_path("project/green_floor.jpg"));
-	auto ceil_wall 			= bonobo::loadTexture2D(config::resources_path("project/green_ceil.jpg"));*/
 
 	// Setting camera and light positions
 	auto camera_position = mCamera.mWorld.GetTranslation();

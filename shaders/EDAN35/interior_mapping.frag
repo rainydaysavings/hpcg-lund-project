@@ -42,20 +42,25 @@ in VS_OUT {
 //back wall = 3
 //ceiling = 4
 //floor = 5
-vec2 POM(vec2 texcoords, vec3 N, vec3 V, float heightScale, int wallIdx){
+const uint WALL_LEFT 	= 1;
+const uint WALL_RIGHT 	= 2;
+const uint WALL_BACK 	= 3;
+const uint WALL_CEIL 	= 4;
+const uint WALL_FLOOR 	= 5;
+vec2 POM(vec2 texcoords, vec3 N, vec3 V, float heightScale, uint wallIdx){
 
 	// Different amount of depth layers depending on view angle (Optimmization)
-	const float minLayers = 8.0;
-	const float maxLayers = 64.0;
+	const float minLayers = 2.0;
+	const float maxLayers = 128.0;
 	float numLayers = mix(maxLayers, minLayers, dot(N,V));
 	numLayers = 128;
 
 	// layerDepth is the depth of every ray step done in the while loop
-	float layerDepth = 1.0/numLayers;
+	float layerDepth = 1.0 / numLayers;
 	float currentLayerDepth = 0.0;
 
 	// S is the step in texture coordinates when stepping along the ray
-	vec2 S = ( -V.yx / V.z )* heightScale;
+	vec2 S = ( -V.yx / V.z ) * heightScale;
 	// deltaUVs is the value added to the texture coordinates every step in the while loop
 	vec2 deltaUVs = S / numLayers;
 
@@ -65,16 +70,16 @@ vec2 POM(vec2 texcoords, vec3 N, vec3 V, float heightScale, int wallIdx){
 	float currentDepthMapValue = 0.0;
 
 	switch(wallIdx){
-		case 1:
+		case WALL_LEFT:
 			currentDepthMapValue = 1.0 - texture2D(left_wall_height, UVs).r;
 			break;
-		case 2:
+		case WALL_RIGHT:
 			currentDepthMapValue = 1.0 - texture2D(right_wall_height, UVs).r;
 			break;
-		case 3:
+		case WALL_BACK:
 			currentDepthMapValue = 1.0 - texture2D(back_wall_height, UVs).r;
 			break;
-		case 4:
+		case WALL_CEIL:
 			currentDepthMapValue = 1.0 - texture2D(ceil_wall_height, UVs).r;
 			break;
 //		case 5:
@@ -87,16 +92,16 @@ vec2 POM(vec2 texcoords, vec3 N, vec3 V, float heightScale, int wallIdx){
 		UVs -= deltaUVs;
 
 		switch(wallIdx){
-		case 1:
+		case WALL_LEFT:
 			currentDepthMapValue = 1.0 - texture2D(left_wall_height, UVs).r;
 			break;
-		case 2:
+		case WALL_RIGHT:
 			currentDepthMapValue = 1.0 - texture2D(right_wall_height, UVs).r;
 			break;
-		case 3:
+		case WALL_BACK:
 			currentDepthMapValue = 1.0 - texture2D(back_wall_height, UVs).r;
 			break;
-		case 4:
+		case WALL_CEIL:
 			currentDepthMapValue = 1.0 - texture2D(ceil_wall_height, UVs).r;
 			break;
 //		case 5:
@@ -116,17 +121,17 @@ vec2 POM(vec2 texcoords, vec3 N, vec3 V, float heightScale, int wallIdx){
 	float beforeDepth = 1.0;
 
 	switch(wallIdx){
-		case 1:
-			beforeDepth = 1.0 - texture2D(left_wall_height, prevTexCoords).r;
+		case WALL_LEFT:
+			beforeDepth -= texture2D(left_wall_height, prevTexCoords).r;
 			break;
-		case 2:
-			beforeDepth = 1.0 - texture2D(right_wall_height, prevTexCoords).r;
+		case WALL_RIGHT:
+			beforeDepth -= texture2D(right_wall_height, prevTexCoords).r;
 			break;
-		case 3:
-			beforeDepth = 1.0 - texture2D(back_wall_height, prevTexCoords).r;
+		case WALL_BACK:
+			beforeDepth -= texture2D(back_wall_height, prevTexCoords).r;
 			break;
-		case 4:
-			beforeDepth = 1.0 - texture2D(ceil_wall_height, prevTexCoords).r;
+		case WALL_CEIL:
+			beforeDepth -= texture2D(ceil_wall_height, prevTexCoords).r;
 			break;
 //		case 5:
 //			currentDepthMapValue = 1.0 - texture2D(floor_wall_height, prevTexCoords).r;
@@ -141,12 +146,14 @@ vec2 POM(vec2 texcoords, vec3 N, vec3 V, float heightScale, int wallIdx){
 	return UVs;
 }
 
+
 void main()
 {
-	vec3 V = inverse(fs_in.TBN) * normalize(camera_position-fs_in.frag_pos);
-	vec3 frag_pos = fs_in.frag_pos * 0.99;
-	vec3 epsilon_camera_pos = camera_position * 0.99;
-	vec3 tangent_space_pos = fs_in.frag_pos - camera_position;
+	vec3 frag_pos = fs_in.frag_pos;
+	vec3 epsilon_camera_pos = camera_position;
+
+	vec3 V = inverse(fs_in.TBN) * normalize(epsilon_camera_pos-fs_in.frag_pos);
+	vec3 tangent_space_pos = fs_in.frag_pos - epsilon_camera_pos;
 
 	// Floor and ceiling calculations
 	float is_floor 		= step(tangent_space_pos.y, 0.0);
@@ -168,55 +175,66 @@ void main()
 	vec3 normal;
 	if (ceiling_t < left_wall_t) {
 		if (ceiling_t < back_wall_t) {
-			vec2 texcoords = epsilon_camera_pos.xz + ceiling_t * tangent_space_pos.xz;
+			vec2 texcoords = (epsilon_camera_pos.xz + ceiling_t * tangent_space_pos.xz) / FLOOR_HEIGHT;
+			if(texcoords.x > 0.98 || texcoords.y > 0.98) vec2(0.0,1.0);
+			if(texcoords.x < 0.02 || texcoords.y < -0.98) vec2(0.0,1.0);
+
 			// It's a ceiling
 			V = (mat4(0, 0, 1, 0,
 					  0, 1, 0, 0,
 					  -1, 0, 0, 0,
 					  0, 0, 0, 1)*vec4(V, 1.0)).xyz;
 			diffuse_color = mix(
-				texture(ceil_wall_color, POM(texcoords / FLOOR_HEIGHT, vec3(0,-1,0), V, 0.1, 4)).rgb,
-				texture(floor_wall_color, texcoords / FLOOR_HEIGHT).rgb,
+				texture(ceil_wall_color, POM(texcoords, vec3(0,-1,0), V, 0.1, WALL_CEIL)).rgb,
+				texture(floor_wall_color, texcoords).rgb,
 				is_floor
 			);
 			normal =  mix(
-				texture(ceil_wall_normal, texcoords / FLOOR_HEIGHT).rgb,
-				texture(floor_wall_normal, texcoords / FLOOR_HEIGHT).rgb,
+				texture(ceil_wall_normal, texcoords).rgb,
+				texture(floor_wall_normal, texcoords).rgb,
 				is_floor
 			);
 		} else {
 			// It's the back wall
-			vec2 texcoords = epsilon_camera_pos.xy + back_wall_t * tangent_space_pos.xy;
-			diffuse_color = texture(back_wall_color, POM(texcoords / ROOM_SIZE, vec3(0,0,1), V, 0.4, 3)).rgb;
-			normal = texture(back_wall_normal, texcoords / ROOM_SIZE).rgb;
+			vec2 texcoords = (epsilon_camera_pos.xy + back_wall_t * tangent_space_pos.xy) / FLOOR_HEIGHT;
+			if(texcoords.x < 0.02 || texcoords.y < 0.02) vec2(0.0,1.0);
+			if(texcoords.x > 0.98 || texcoords.y > 0.98) vec2(0.0,1.0);
+			diffuse_color = texture(back_wall_color, POM(texcoords, vec3(0,0,1), V, 0.5, WALL_BACK)).rgb;
+			normal = texture(back_wall_normal, texcoords).rgb;
 		}
 	} else {
 		if (back_wall_t < left_wall_t) {
 			// It's the back wall
-			vec2 texcoords = epsilon_camera_pos.xy + back_wall_t * tangent_space_pos.xy;
-			diffuse_color = texture(back_wall_color, POM(texcoords / ROOM_SIZE, vec3(0,0,1), V, 0.4, 3)).rgb;
-			normal = texture(back_wall_normal, texcoords / ROOM_SIZE).rgb;
+			vec2 texcoords = (epsilon_camera_pos.xy + back_wall_t * tangent_space_pos.xy) / ROOM_SIZE;
+			if(texcoords.x < 0.02 || texcoords.y < 0.02) vec2(0.0,1.0);
+			if(texcoords.x > 0.98 || texcoords.y > 0.98) vec2(0.0,1.0);
+
+			diffuse_color = texture(back_wall_color, POM(texcoords, vec3(0,0,1), V, 0.5, WALL_BACK)).rgb;
+			normal = texture(back_wall_normal, texcoords).rgb;
 		} else {
 			// It's a side wall, needs to check if left or right
-			vec2 texcoords = epsilon_camera_pos.zy + left_wall_t * tangent_space_pos.zy;
+			vec2 texcoords = (epsilon_camera_pos.zy + left_wall_t * tangent_space_pos.zy) / ROOM_SIZE;
+			if(texcoords.x < -0.98 || texcoords.y < 0.02) vec2(0.0,1.0);
+			if(texcoords.x > -0.02 || texcoords.y > 0.98) vec2(0.0,1.0);
+
 			if(is_left_wall != 1){
 				V = (mat4(1, 0, 0, 0,
 						  0, 0, 1, 0,
 						  0, -1, 0, 0,
 						  0, 0, 0, 1)*vec4(V, 1.0)).xyz;
-				diffuse_color = texture(right_wall_color, POM(texcoords / ROOM_SIZE, vec3(-1,0,0), V, 0.1, 2)).rgb;
+				diffuse_color = texture(right_wall_color, POM(texcoords, vec3(-1,0,0), V, 0.1, WALL_RIGHT)).rgb;
 			} else {
 				V = (mat4(1, 0, 0, 0,
 						  0, 0, -1, 0,
 						  0, -1, 0, 0,
 						  0, 0, 0, 1)*vec4(V, 1.0)).xyz;
 
-				diffuse_color = texture(left_wall_color, POM(texcoords / ROOM_SIZE, vec3(1,0,0), V, 0.1, 1)).rgb;
+				diffuse_color = texture(left_wall_color, POM(texcoords, vec3(1,0,0), V, 0.1, WALL_LEFT)).rgb;
 			}
 
 			normal =  mix(
-				texture(left_wall_normal, texcoords / ROOM_SIZE).rgb,
-				texture(right_wall_normal, texcoords / ROOM_SIZE).rgb,
+				texture(left_wall_normal, texcoords).rgb,
+				texture(right_wall_normal, texcoords).rgb,
 				is_left_wall
 			);
 		}
