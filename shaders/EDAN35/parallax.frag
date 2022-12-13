@@ -44,7 +44,7 @@ void main()
 	float shadowFactor = 1;
 	if(use_POM){
 		// set heightscale
-		float heightScale = 0.05;
+		float heightScale = 0.4;
 
 		// Different amount of depth layers depending on view angle (Optimmization)
 		const float minLayers = 8.0;
@@ -99,8 +99,10 @@ void main()
 		shadowNumLayers = 80.0;
 
 		float shadowLayerDepth = 1.0/shadowNumLayers;
-		vec2 lightStep = ( L.yx / L.z ) * heightScale;
 		float initialDepth = 1.0 - texture2D(height_map, UVs).r;
+		L = L + N*initialDepth;
+		vec2 lightStep = ( L.yx / L.z ) * heightScale;
+		
 		currentLayerDepth = initialDepth;
 		deltaUVs = lightStep / (shadowNumLayers *currentLayerDepth);
 		vec2 tempUVs = UVs;

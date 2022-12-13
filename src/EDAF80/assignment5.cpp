@@ -72,12 +72,11 @@ edaf80::Assignment5::run()
 		return;
 	}
 
-	//
-	// Todo: Insert the creation of other shader programs.
-	//       (Check how it was done in assignment 3.)
-	//
+	//following does nothing, I don't know why
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+
+	//load all textures
 
 	auto test_height_map = bonobo::loadTexture2D(config::resources_path("project/Parallax_Occlusion_test_heightraw.png"));
 	auto test_color_map = bonobo::loadTexture2D(config::resources_path("project/Parallax_Occlusion_test_Color.png"));
@@ -95,6 +94,7 @@ edaf80::Assignment5::run()
 	auto wall3_color_map = bonobo::loadTexture2D(config::resources_path("project/wall3/wall3_albedo_bright.png"));
 	auto wall3_normal_map = bonobo::loadTexture2D(config::resources_path("project/wall3/wall3_normal.png"));
 
+	//floor height map is not used
 	//auto floor_height_map = bonobo::loadTexture2D(config::resources_path("project/floor/floor_height.png"));
 	auto floor_color_map = bonobo::loadTexture2D(config::resources_path("project/floor/floor_albedo.jpg"));
 	auto floor_normal_map = bonobo::loadTexture2D(config::resources_path("project/floor/floor_normal.jpg"));
@@ -110,12 +110,6 @@ edaf80::Assignment5::run()
 
 	
 
-	
-
-
-	//
-	// Todo: Load your geometry
-	//
 	auto camera_position = mCamera.mWorld.GetTranslation();
 	auto light_position = glm::vec3(2.0f, -4.0f, -2.0f);
 	bool use_POM = false;
@@ -136,9 +130,9 @@ edaf80::Assignment5::run()
 	wall.add_texture("test_color_map", test_color_map, GL_TEXTURE_2D);
 	wall.add_texture("test_normal_map", test_normal_map, GL_TEXTURE_2D);
 
-	wall.add_texture("height_map", ceiling_height_map, GL_TEXTURE_2D);
-	wall.add_texture("color_map",ceiling_color_map, GL_TEXTURE_2D);
-	wall.add_texture("normal_map", ceiling_normal_map, GL_TEXTURE_2D);
+	wall.add_texture("height_map", wall3_height_map, GL_TEXTURE_2D);
+	wall.add_texture("color_map",wall3_color_map, GL_TEXTURE_2D);
+	wall.add_texture("normal_map", wall3_normal_map, GL_TEXTURE_2D);
 	wall.add_texture("opacity_map", window_opacity_map, GL_TEXTURE_2D);
 
 	glm::mat4 wallTransform = wall.get_transform().GetMatrix();
