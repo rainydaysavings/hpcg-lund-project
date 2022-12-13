@@ -177,9 +177,9 @@ edaf80::Assignment5::run()
 	bool show_basis = false;
 	float basis_thickness_scale = 0.5f;
 	float basis_length_scale = 1.0f;
-	float lightposX = 0.0f;
-	float lightposY = 0.0f;
-	float lightposZ = 0.0f;
+	float lightposX = 5.0f;
+	float lightposY = 2.5f;
+	float lightposZ = -5.0f;
 	while (!glfwWindowShouldClose(window)) {
 		auto const nowTime = std::chrono::high_resolution_clock::now();
 		auto const deltaTimeUs = std::chrono::duration_cast<std::chrono::microseconds>(nowTime - lastTime);

@@ -20,9 +20,12 @@ uniform sampler2D right_wall_normal;
 uniform sampler2D floor_wall_normal;
 uniform sampler2D ceil_wall_normal;
 
+uniform sampler2D opacity_map;
+
 uniform vec3 camera_position;
 uniform vec3 light_position;
 uniform mat4 normal_model_to_world;
+uniform mat4 vertex_world_to_clip;
 
 const float FLOOR_HEIGHT = 5.0;
 const float ROOM_SIZE = 5.0;
@@ -75,9 +78,9 @@ vec2 POM(vec2 texcoords, vec3 N, vec3 V, float heightScale, uint wallIdx) {
     case WALL_CEIL:
         currentDepthMapValue = 1.0 - texture2D(ceil_wall_height, UVs).r;
         break;
-//	case 5:
-//		currentDepthMapValue = 1.0 - texture2D(floor_wall_height, UVs).r;
-//		break;
+        //	case 5:
+        //		currentDepthMapValue = 1.0 - texture2D(floor_wall_height, UVs).r;
+        //		break;
     }
 
     // while loop iterates in the direction of deltaUVs, and steps down a depth layer value each loop
@@ -97,9 +100,9 @@ vec2 POM(vec2 texcoords, vec3 N, vec3 V, float heightScale, uint wallIdx) {
         case WALL_CEIL:
             currentDepthMapValue = 1.0 - texture2D(ceil_wall_height, UVs).r;
             break;
-//		case 5:
-//			currentDepthMapValue = 1.0 - texture2D(floor_wall_height, UVs).r;
-//			break;
+            //		case 5:
+            //			currentDepthMapValue = 1.0 - texture2D(floor_wall_height, UVs).r;
+            //			break;
         }
 
         currentLayerDepth += layerDepth;
@@ -126,9 +129,9 @@ vec2 POM(vec2 texcoords, vec3 N, vec3 V, float heightScale, uint wallIdx) {
     case WALL_CEIL:
         beforeDepth -= texture2D(ceil_wall_height, prevTexCoords).r;
         break;
-//	case 5:
-//		currentDepthMapValue = 1.0 - texture2D(floor_wall_height, prevTexCoords).r;
-//		break;
+        //	case 5:
+        //		currentDepthMapValue = 1.0 - texture2D(floor_wall_height, prevTexCoords).r;
+        //		break;
     }
 
     beforeDepth = beforeDepth - currentLayerDepth + layerDepth;
@@ -231,5 +234,26 @@ void main() {
         }
     }
 
-    frag_color.xyz = diffuse_color;
+	float decay = 0.96;
+    float exposure = 0.03;
+    float density = 0.420;
+    float weight = 0.38767;
+    int num_samples = 100;
+
+    vec3 rays_color = vec3(0.0, 0.0, 0.0);
+	vec2 tc_step = fs_in.texcoords;
+	vec2 delta_texcoords = vec2(tc_step - normalize(vertex_world_to_clip * vec4(light_position.xyz, 0.0)).xy);
+
+	delta_texcoords *= (1.0 /  float(num_samples)) * density;
+	float illuminationDecay = 1.0;
+	for(int i=0; i < num_samples ; ++i){
+		tc_step -= delta_texcoords;
+		vec3 sample_step = vec3(1.0, 1.0, 1.0) - texture2D(opacity_map, tc_step).xyz;
+		sample_step *= illuminationDecay * weight;
+		rays_color += sample_step;
+		illuminationDecay *= decay;
+	}
+	rays_color *= exposure;
+
+    frag_color.xyz = diffuse_color + rays_color;
 }
