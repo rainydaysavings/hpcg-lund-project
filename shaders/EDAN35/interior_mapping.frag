@@ -46,13 +46,11 @@ void main()
 	if (ceiling_t < left_wall_t) {
 		if (ceiling_t < back_wall_t) {
 			vec2 texcoords = camera_position.xz + ceiling_t * tangent_space_pos.xz;
-			vec4 t0 = texture2D(right_wall, texcoords / FLOOR_HEIGHT);
-			vec4 t1 = texture2D(floor_wall, texcoords / FLOOR_HEIGHT);
 			// It's a ceiling
 			diffuse_color = mix(
-				t0.rgb,
-				t1.rgb,
-				mix(0.0, 0.4, texcoords.x)
+				texture(floor_wall, texcoords / FLOOR_HEIGHT).rgb,
+				texture(ceil_wall, texcoords / FLOOR_HEIGHT).rgb,
+				is_floor
 			);
 		} else {
 			// It's the back wall
