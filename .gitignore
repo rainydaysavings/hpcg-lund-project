@@ -9,12 +9,7 @@ out/
 dependencies/
 
 # Resources folder
-res/cubemaps
-res/planets
-res/scenes
-res/sponza
-res/textures
-res.zip
+res/
 
 # Application produced files
 imgui.ini
@@ -29,3 +24,33 @@ log.txt
 
 # Kdevelop files
 *kdev4
+/res/project/window/window_opacity.png
+/res/project/window/window_normal.png
+/res/project/window/window_height.png
+/res/project/window/window_albedo.png
+/res/project/window
+/res/project/wall3/wall3_normal.png
+/res/project/wall3/wall3_height.png
+/res/project/wall3/wall3_albedo_bright.png
+/res/project/wall3
+/res/project/wall2/wall2_normal.png
+/res/project/wall2/wall2_height.png
+/res/project/wall2/wall2_albedo_bright.png
+/res/project/wall2
+/res/project/wall1/wall1_height.png
+/res/project/wall1/wall1_albedo_bright.png
+/res/project/wall1/normal.png
+/res/project/wall1
+/res/project/Parallax_Occlusion_test_normal.png
+/res/project/Parallax_Occlusion_test_heightraw.png
+/res/project/Parallax_Occlusion_test_Color.png
+/res/project/floor/floor_normal.jpg
+/res/project/floor/floor_albedo.jpg
+/res/project/floor
+/res/project/ceiling/ceiling_normal.png
+/res/project/ceiling/ceiling_height.png
+/res/project/ceiling/ceiling_albedo.png
+/res/project/ceiling/ceil_normal.png
+/res/project/ceiling/ceil_height.png
+/res/project/ceiling/ceil_albedo.png
+/res/project/projectsrc2048.zip

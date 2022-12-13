@@ -92,25 +92,25 @@ edaf80::Assignment5::run()
 	auto test_normal_map = bonobo::loadTexture2D(config::resources_path("project/Parallax_Occlusion_test_normal.png"));
 
 	auto wall1_height_map = bonobo::loadTexture2D(config::resources_path("project/wall1/wall1_height.png"));
-	auto wall1_color_map = bonobo::loadTexture2D(config::resources_path("project/wall1/wall1_albedo_bright.png"));
-	auto wall1_normal_map = bonobo::loadTexture2D(config::resources_path("project/wall1/normal.png"));
+	auto wall1_color_map = bonobo::loadTexture2D(config::resources_path("project/wall1/wall1_albedo.png"));
+	auto wall1_normal_map = bonobo::loadTexture2D(config::resources_path("project/wall1/wall1_normal.png"));
 
 	auto wall2_height_map = bonobo::loadTexture2D(config::resources_path("project/wall2/wall2_height.png"));
-	auto wall2_color_map = bonobo::loadTexture2D(config::resources_path("project/wall2/wall2_albedo_bright.png"));
+	auto wall2_color_map = bonobo::loadTexture2D(config::resources_path("project/wall2/wall2_albedo.png"));
 	auto wall2_normal_map = bonobo::loadTexture2D(config::resources_path("project/wall2/wall2_normal.png"));
 
 	auto wall3_height_map = bonobo::loadTexture2D(config::resources_path("project/wall3/wall3_height.png"));
-	auto wall3_color_map = bonobo::loadTexture2D(config::resources_path("project/wall3/wall3_albedo_bright.png"));
+	auto wall3_color_map = bonobo::loadTexture2D(config::resources_path("project/wall3/wall3_albedo.png"));
 	auto wall3_normal_map = bonobo::loadTexture2D(config::resources_path("project/wall3/wall3_normal.png"));
 
 	//floor height map is not used
 	//auto floor_height_map = bonobo::loadTexture2D(config::resources_path("project/floor/floor_height.png"));
-	auto floor_color_map = bonobo::loadTexture2D(config::resources_path("project/floor/floor_albedo.jpg"));
-	auto floor_normal_map = bonobo::loadTexture2D(config::resources_path("project/floor/floor_normal.jpg"));
+	auto floor_color_map = bonobo::loadTexture2D(config::resources_path("project/floor/floor_albedo.png"));
+	auto floor_normal_map = bonobo::loadTexture2D(config::resources_path("project/floor/floor_normal.png"));
 
-	auto ceiling_height_map = bonobo::loadTexture2D(config::resources_path("project/ceiling/ceiling_height.png"));
-	auto ceiling_color_map = bonobo::loadTexture2D(config::resources_path("project/ceiling/ceiling_albedo.png"));
-	auto ceiling_normal_map = bonobo::loadTexture2D(config::resources_path("project/ceiling/ceiling_normal.png"));
+	auto ceiling_height_map = bonobo::loadTexture2D(config::resources_path("project/ceiling/ceil_height.png"));
+	auto ceiling_color_map = bonobo::loadTexture2D(config::resources_path("project/ceiling/ceil_albedo.png"));
+	auto ceiling_normal_map = bonobo::loadTexture2D(config::resources_path("project/ceiling/ceil_normal.png"));
 
 	auto window_height_map = bonobo::loadTexture2D(config::resources_path("project/window/window_height.png"));
 	auto window_color_map = bonobo::loadTexture2D(config::resources_path("project/window/window_albedo.png"));
@@ -125,11 +125,11 @@ edaf80::Assignment5::run()
 	//
 	// Todo: Load your geometry
 	//
-	auto back_wall 			= bonobo::loadTexture2D(config::resources_path("project/blue_back.jpg"));
+	/*auto back_wall 			= bonobo::loadTexture2D(config::resources_path("project/blue_back.jpg"));
 	auto left_wall 			= bonobo::loadTexture2D(config::resources_path("project/red_left.jpg"));
 	auto right_wall 		= bonobo::loadTexture2D(config::resources_path("project/red_right.jpg"));
 	auto floor_wall 		= bonobo::loadTexture2D(config::resources_path("project/green_floor.jpg"));
-	auto ceil_wall 			= bonobo::loadTexture2D(config::resources_path("project/green_ceil.jpg"));
+	auto ceil_wall 			= bonobo::loadTexture2D(config::resources_path("project/green_ceil.jpg"));*/
 
 	// Setting camera and light positions
 	auto camera_position = mCamera.mWorld.GetTranslation();
@@ -149,7 +149,7 @@ edaf80::Assignment5::run()
 	auto wall_shape = parametric_shapes::createQuad(10.0f, 10.0f, 0, 0);
 	Node wall;
 	wall.set_geometry(wall_shape);
-	wall.set_program(&parallax_shader, set_uniforms);
+	//wall.set_program(&parallax_shader, set_uniforms);
 	wall.add_texture("test_height_map", test_height_map, GL_TEXTURE_2D);
 	wall.add_texture("test_color_map", test_color_map, GL_TEXTURE_2D);
 	wall.add_texture("test_normal_map", test_normal_map, GL_TEXTURE_2D);
@@ -159,12 +159,26 @@ edaf80::Assignment5::run()
 	wall.add_texture("normal_map", wall3_normal_map, GL_TEXTURE_2D);
 	wall.add_texture("opacity_map", window_opacity_map, GL_TEXTURE_2D);
 
-	//wall.set_program(&interior_mapping_shader, 	set_uniforms);
-	//wall.add_texture("back_wall", 	back_wall, 	GL_TEXTURE_2D);
-	//wall.add_texture("left_wall", 	left_wall,	GL_TEXTURE_2D);
-	//wall.add_texture("right_wall", 	right_wall, GL_TEXTURE_2D);
-	//wall.add_texture("floor_wall", 	floor_wall, GL_TEXTURE_2D);
-	//wall.add_texture("ceil_wall", 	ceil_wall, 	GL_TEXTURE_2D);
+	wall.set_program(&interior_mapping_shader, 	set_uniforms);
+	wall.add_texture("back_wall", wall3_color_map, 	GL_TEXTURE_2D);
+	wall.add_texture("left_wall", wall2_color_map,	GL_TEXTURE_2D);
+	wall.add_texture("right_wall", wall1_color_map, GL_TEXTURE_2D);
+	wall.add_texture("floor_wall", floor_color_map, GL_TEXTURE_2D);
+	wall.add_texture("ceil_wall", ceiling_color_map,GL_TEXTURE_2D);
+
+	wall.add_texture("back_wall_height", wall3_height_map, GL_TEXTURE_2D);
+	wall.add_texture("left_wall_height", wall2_height_map, GL_TEXTURE_2D);
+	wall.add_texture("right_wall_height", wall1_height_map, GL_TEXTURE_2D);
+	//wall.add_texture("floor_wall_height", floor_height_map, GL_TEXTURE_2D);
+	wall.add_texture("ceil_wall_height", ceiling_height_map, GL_TEXTURE_2D);
+
+	wall.add_texture("back_wall_normal", wall3_normal_map, GL_TEXTURE_2D);
+	wall.add_texture("left_wall_normal", wall2_normal_map, GL_TEXTURE_2D);
+	wall.add_texture("right_wall_normal", wall1_normal_map, GL_TEXTURE_2D);
+	wall.add_texture("floor_wall_normal", floor_normal_map, GL_TEXTURE_2D);
+	wall.add_texture("ceil_wall_normal", ceiling_normal_map, GL_TEXTURE_2D);
+
+
 
 	glm::mat4 wallTransform = wall.get_transform().GetMatrix();
 	wallTransform = glm::rotate(wallTransform, -glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
