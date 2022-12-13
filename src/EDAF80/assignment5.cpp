@@ -76,14 +76,41 @@ edaf80::Assignment5::run()
 	// Todo: Insert the creation of other shader programs.
 	//       (Check how it was done in assignment 3.)
 	//
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 
 	auto test_height_map = bonobo::loadTexture2D(config::resources_path("project/Parallax_Occlusion_test_heightraw.png"));
 	auto test_color_map = bonobo::loadTexture2D(config::resources_path("project/Parallax_Occlusion_test_Color.png"));
 	auto test_normal_map = bonobo::loadTexture2D(config::resources_path("project/Parallax_Occlusion_test_normal.png"));
 
-	auto height_map = bonobo::loadTexture2D(config::resources_path("project/height.png"));
-	auto color_map = bonobo::loadTexture2D(config::resources_path("project/wall_albedo.png"));
-	auto normal_map = bonobo::loadTexture2D(config::resources_path("project/normal.png"));
+	auto wall1_height_map = bonobo::loadTexture2D(config::resources_path("project/wall1/wall1_height.png"));
+	auto wall1_color_map = bonobo::loadTexture2D(config::resources_path("project/wall1/wall1_albedo_bright.png"));
+	auto wall1_normal_map = bonobo::loadTexture2D(config::resources_path("project/wall1/normal.png"));
+
+	auto wall2_height_map = bonobo::loadTexture2D(config::resources_path("project/wall2/wall2_height.png"));
+	auto wall2_color_map = bonobo::loadTexture2D(config::resources_path("project/wall2/wall2_albedo_bright.png"));
+	auto wall2_normal_map = bonobo::loadTexture2D(config::resources_path("project/wall2/wall2_normal.png"));
+
+	auto wall3_height_map = bonobo::loadTexture2D(config::resources_path("project/wall3/wall3_height.png"));
+	auto wall3_color_map = bonobo::loadTexture2D(config::resources_path("project/wall3/wall3_albedo_bright.png"));
+	auto wall3_normal_map = bonobo::loadTexture2D(config::resources_path("project/wall3/wall3_normal.png"));
+
+	//auto floor_height_map = bonobo::loadTexture2D(config::resources_path("project/floor/floor_height.png"));
+	auto floor_color_map = bonobo::loadTexture2D(config::resources_path("project/floor/floor_albedo.jpg"));
+	auto floor_normal_map = bonobo::loadTexture2D(config::resources_path("project/floor/floor_normal.jpg"));
+
+	auto ceiling_height_map = bonobo::loadTexture2D(config::resources_path("project/ceiling/ceiling_height.png"));
+	auto ceiling_color_map = bonobo::loadTexture2D(config::resources_path("project/ceiling/ceiling_albedo.png"));
+	auto ceiling_normal_map = bonobo::loadTexture2D(config::resources_path("project/ceiling/ceiling_normal.png"));
+
+	auto window_height_map = bonobo::loadTexture2D(config::resources_path("project/window/window_height.png"));
+	auto window_color_map = bonobo::loadTexture2D(config::resources_path("project/window/window_albedo.png"));
+	auto window_normal_map = bonobo::loadTexture2D(config::resources_path("project/window/window_normal.png"));
+	auto window_opacity_map = bonobo::loadTexture2D(config::resources_path("project/window/window_opacity.png"));
+
+	
+
+	
 
 
 	//
@@ -109,9 +136,10 @@ edaf80::Assignment5::run()
 	wall.add_texture("test_color_map", test_color_map, GL_TEXTURE_2D);
 	wall.add_texture("test_normal_map", test_normal_map, GL_TEXTURE_2D);
 
-	wall.add_texture("height_map", height_map, GL_TEXTURE_2D);
-	wall.add_texture("color_map", color_map, GL_TEXTURE_2D);
-	wall.add_texture("normal_map", normal_map, GL_TEXTURE_2D);
+	wall.add_texture("height_map", ceiling_height_map, GL_TEXTURE_2D);
+	wall.add_texture("color_map",ceiling_color_map, GL_TEXTURE_2D);
+	wall.add_texture("normal_map", ceiling_normal_map, GL_TEXTURE_2D);
+	wall.add_texture("opacity_map", window_opacity_map, GL_TEXTURE_2D);
 
 	glm::mat4 wallTransform = wall.get_transform().GetMatrix();
 	wallTransform = glm::rotate(wallTransform, -glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));

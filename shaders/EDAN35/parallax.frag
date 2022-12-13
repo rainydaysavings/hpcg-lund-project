@@ -6,6 +6,7 @@ out vec4 frag_color;
 uniform sampler2D test_color_map;
 uniform sampler2D test_height_map;
 uniform sampler2D test_normal_map;
+uniform sampler2D opacity_map;
 
 uniform sampler2D color_map;
 uniform sampler2D height_map;
@@ -43,13 +44,13 @@ void main()
 	float shadowFactor = 1;
 	if(use_POM){
 		// set heightscale
-		float heightScale = 0.1;
+		float heightScale = 0.05;
 
 		// Different amount of depth layers depending on view angle (Optimmization)
 		const float minLayers = 8.0;
 		const float maxLayers = 64.0;
 		float numLayers = mix(maxLayers, minLayers, dot(N,V));
-		numLayers = 64;
+		numLayers = 128;
 
 		// layerDepth is the depth of every ray step done in the while loop
 		float layerDepth = 1.0/numLayers;
@@ -84,10 +85,10 @@ void main()
 		UVs = prevTexCoords * weight + UVs * (1.0 - weight);
 
 		// can be used to exclude pixels that are outside the single texture tile
-		if(UVs.x > 1.0 || UVs.y > 1.0 || UVs.x < 0.0 || UVs.y < 0.0){
-			discard;
-			return;
-		}
+//		if(UVs.x > 1.0 || UVs.y > 1.0 || UVs.x < 0.0 || UVs.y < 0.0){
+//			discard;
+//			return;
+//		}
 	
 	
 	
@@ -156,18 +157,26 @@ void main()
 	}
 	//phong shading
 
+	shadowFactor *= shadowFactor;
+
 	N = normalize(normal_model_to_world * vec4(fs_in.TBN * (texture2D(normal_map, UVs).rgb * 2 - 1), 1.0)).rgb;
-	N = vec3(-N.r, -N.b, N.g);
+	N = vec3(N.r, -N.b, N.g);
 
 	vec3 R = normalize(reflect(L,N));
 
 	vec3 ambient = vec3(0.2, 0.2, 0.2);
 
+	float opacity = texture2D(opacity_map, UVs).r;
+//	if(opacity == 0){
+//		discard;
+//		return;
+//	}
+
 	vec4 diffuseTexture = texture2D(color_map, UVs);
 	vec3 diffuse = max(dot(L,N), 0.0) * diffuseTexture.rgb * shadowFactor;
 
-	vec3 specColor = vec3(1.0, 1.0, 1.0);
-	float shininess = 10.0;
+	vec3 specColor = 0.2*vec3(1.0, 1.0, 1.0);
+	float shininess = 2.0;
 	vec3 specular = specColor * pow(max(dot(R,-V), 0.0), shininess);
 
 	
