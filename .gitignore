@@ -9,7 +9,11 @@ out/
 dependencies/
 
 # Resources folder
-res/
+res/cubemaps
+res/planets
+res/scenes
+res/sponza
+res/textures
 res.zip
 
 # Application produced files

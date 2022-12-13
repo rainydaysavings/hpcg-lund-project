@@ -68,6 +68,16 @@ edaf80::Assignment5::run()
 		return;
 	}
 
+	GLuint interior_mapping_shader = 0u;
+	program_manager.CreateAndRegisterProgram("interior_mapping",
+		{ { ShaderType::vertex, "EDAN35/interior_mapping.vert" },
+		  { ShaderType::fragment, "EDAN35/interior_mapping.frag" } },
+		interior_mapping_shader);
+	if (interior_mapping_shader == 0u) {
+		LogError("Failed to load interior mapping shader");
+		return;
+	}
+
 	//
 	// Todo: Insert the creation of other shader programs.
 	//       (Check how it was done in assignment 3.)
