@@ -6,11 +6,11 @@ uniform sampler2D test_height_map;
 uniform sampler2D test_color_map;
 uniform sampler2D test_normal_map;
 
-uniform sampler2D back_wall;
-uniform sampler2D left_wall;
-uniform sampler2D right_wall;
-uniform sampler2D floor_wall;
-uniform sampler2D ceil_wall;
+uniform sampler2D back_wall_color;
+uniform sampler2D left_wall_color;
+uniform sampler2D right_wall_color;
+uniform sampler2D floor_wall_color;
+uniform sampler2D ceil_wall_color;
 
 uniform sampler2D back_wall_height;
 uniform sampler2D left_wall_height;
@@ -328,24 +328,25 @@ void main()
 
 	// Floor and ceiling calculations
 	float is_floor 		= step(tangent_space_pos.y, 0.0);
-	float ceiling_y 	= ceil(fs_in.frag_pos.y / FLOOR_HEIGHT - is_floor) * FLOOR_HEIGHT;
-	float ceiling_t 	= (ceiling_y - camera_position.y) / tangent_space_pos.y;
+	float ceiling_y 	= ceil(frag_pos.y / FLOOR_HEIGHT - is_floor) * FLOOR_HEIGHT;
+	float ceiling_t 	= (ceiling_y - epsilon_camera_pos.y) / tangent_space_pos.y;
 
 	// Back wall calculation
 	float is_back_wall 	= step(tangent_space_pos.z, 0.0);
-	float back_wall_z 	= ceil(fs_in.frag_pos.z / ROOM_SIZE - is_back_wall) * ROOM_SIZE;
-	float back_wall_t 	= (back_wall_z - camera_position.z) / tangent_space_pos.z;
+	float back_wall_z 	= ceil(frag_pos.z / ROOM_SIZE - is_back_wall) * ROOM_SIZE;
+	float back_wall_t 	= (back_wall_z - epsilon_camera_pos.z) / tangent_space_pos.z;
 
 	// Left wall calculation
 	float is_left_wall 	= step(tangent_space_pos.x, 0.0);
-	float left_wall_x 	= ceil(fs_in.frag_pos.x / ROOM_SIZE - is_left_wall) * ROOM_SIZE;
-	float left_wall_t 	= (left_wall_x - camera_position.x) / tangent_space_pos.x;
+	float left_wall_x 	= ceil(frag_pos.x / ROOM_SIZE - is_left_wall) * ROOM_SIZE;
+	float left_wall_t 	= (left_wall_x - epsilon_camera_pos.x) / tangent_space_pos.x;
 
 	// Let's paint walls
 	vec3 diffuse_color;
+	vec3 normal;
 	if (ceiling_t < left_wall_t) {
 		if (ceiling_t < back_wall_t) {
-			vec2 texcoords = camera_position.xz + ceiling_t * tangent_space_pos.xz;
+			vec2 texcoords = epsilon_camera_pos.xz + ceiling_t * tangent_space_pos.xz;
 			// It's a ceiling
 			V = (mat4(0, 0, 1, 0,
 					  0, 1, 0, 0,
@@ -430,7 +431,7 @@ void main()
 			
 		} else {
 			// It's a side wall, needs to check if left or right
-			vec2 texcoords = camera_position.zy + left_wall_t * tangent_space_pos.zy;
+			vec2 texcoords = epsilon_camera_pos.zy + left_wall_t * tangent_space_pos.zy;
 			if(is_left_wall != 1){
 			// right wall
 				V = (mat4(1, 0, 0, 0,

@@ -9,7 +9,12 @@ out/
 dependencies/
 
 # Resources folder
+<<<<<<< HEAD
 res/
+=======
+res
+res.zip
+>>>>>>> e47a5db (lol)
 
 # Application produced files
 imgui.ini

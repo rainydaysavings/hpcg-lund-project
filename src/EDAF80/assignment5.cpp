@@ -160,11 +160,11 @@ edaf80::Assignment5::run()
 	
 
 	wall.set_program(&interior_mapping_shader, 	set_uniforms);
-	wall.add_texture("back_wall", wall3_color_map, 	GL_TEXTURE_2D);
-	wall.add_texture("left_wall", wall2_color_map,	GL_TEXTURE_2D);
-	wall.add_texture("right_wall", wall1_color_map, GL_TEXTURE_2D);
-	wall.add_texture("floor_wall", floor_color_map, GL_TEXTURE_2D);
-	wall.add_texture("ceil_wall", ceiling_color_map,GL_TEXTURE_2D);
+	wall.add_texture("back_wall_color", wall3_color_map, 	GL_TEXTURE_2D);
+	wall.add_texture("left_wall_color", wall2_color_map,	GL_TEXTURE_2D);
+	wall.add_texture("right_wall_color", wall1_color_map, GL_TEXTURE_2D);
+	wall.add_texture("floor_wall_color", floor_color_map, GL_TEXTURE_2D);
+	wall.add_texture("ceil_wall_color", ceiling_color_map,GL_TEXTURE_2D);
 
 	wall.add_texture("back_wall_height", wall3_height_map, GL_TEXTURE_2D);
 	wall.add_texture("left_wall_height", wall2_height_map, GL_TEXTURE_2D);
@@ -177,11 +177,6 @@ edaf80::Assignment5::run()
 	wall.add_texture("right_wall_normal", wall1_normal_map, GL_TEXTURE_2D);
 	wall.add_texture("floor_wall_normal", floor_normal_map, GL_TEXTURE_2D);
 	wall.add_texture("ceil_wall_normal", ceiling_normal_map, GL_TEXTURE_2D);
-
-	wall.add_texture("window_color", window_color_map, GL_TEXTURE_2D);
-	wall.add_texture("window_height", window_height_map, GL_TEXTURE_2D);
-	wall.add_texture("window_normal", window_normal_map, GL_TEXTURE_2D);
-	wall.add_texture("window_opacity", window_opacity_map, GL_TEXTURE_2D);
 
 
 
