@@ -325,28 +325,29 @@ void main()
 
 	}
 	vec3 tangent_space_pos = fs_in.frag_pos - camera_position;
+	vec3 frag_pos = fs_in.frag_pos;
 
 	// Floor and ceiling calculations
 	float is_floor 		= step(tangent_space_pos.y, 0.0);
 	float ceiling_y 	= ceil(frag_pos.y / FLOOR_HEIGHT - is_floor) * FLOOR_HEIGHT;
-	float ceiling_t 	= (ceiling_y - epsilon_camera_pos.y) / tangent_space_pos.y;
+	float ceiling_t 	= (ceiling_y - camera_position.y) / tangent_space_pos.y;
 
 	// Back wall calculation
 	float is_back_wall 	= step(tangent_space_pos.z, 0.0);
 	float back_wall_z 	= ceil(frag_pos.z / ROOM_SIZE - is_back_wall) * ROOM_SIZE;
-	float back_wall_t 	= (back_wall_z - epsilon_camera_pos.z) / tangent_space_pos.z;
+	float back_wall_t 	= (back_wall_z - camera_position.z) / tangent_space_pos.z;
 
 	// Left wall calculation
 	float is_left_wall 	= step(tangent_space_pos.x, 0.0);
 	float left_wall_x 	= ceil(frag_pos.x / ROOM_SIZE - is_left_wall) * ROOM_SIZE;
-	float left_wall_t 	= (left_wall_x - epsilon_camera_pos.x) / tangent_space_pos.x;
+	float left_wall_t 	= (left_wall_x - camera_position.x) / tangent_space_pos.x;
 
 	// Let's paint walls
 	vec3 diffuse_color;
 	vec3 normal;
 	if (ceiling_t < left_wall_t) {
 		if (ceiling_t < back_wall_t) {
-			vec2 texcoords = epsilon_camera_pos.xz + ceiling_t * tangent_space_pos.xz;
+			vec2 texcoords = camera_position.xz + ceiling_t * tangent_space_pos.xz;
 			// It's a ceiling
 			V = (mat4(0, 0, 1, 0,
 					  0, 1, 0, 0,
@@ -364,7 +365,7 @@ void main()
 					diffuse_color = texture(test_color_map, UVs).rgb;
 				} else {
 					N = texture2D(ceil_wall_normal, UVs).rgb* 2 - 1;
-					diffuse_color = texture(ceil_wall, UVs).rgb;
+					diffuse_color = texture(ceil_wall_color, UVs).rgb;
 				}
 				shadowFactor = softShadow(UVs, L, vec3(0,0,1), 0.1, 4);
 				
@@ -384,7 +385,7 @@ void main()
 					shadowFactor = softShadow(UVs, L, vec3(0,0,1), 0.1, 4);
 				} else {
 					L = lp - vec3(texcoords / FLOOR_HEIGHT, initialDepth);
-					diffuse_color = texture(floor_wall, texcoords / FLOOR_HEIGHT).rgb;
+					diffuse_color = texture(floor_wall_color, texcoords / FLOOR_HEIGHT).rgb;
 					N = texture2D(floor_wall_normal, texcoords / FLOOR_HEIGHT).rgb* 2 - 1;
 					N = (mat4(1, 0, 0, 0,
 							  0, 1, 0, 0,
@@ -406,7 +407,7 @@ void main()
 				diffuse_color = texture(test_color_map, UVs).rgb;
 			} else {
 				N = texture2D(back_wall_normal, UVs).rgb* 2 - 1;
-				diffuse_color = texture(back_wall, UVs).rgb;
+				diffuse_color = texture(back_wall_color, UVs).rgb;
 			}
 			shadowFactor = softShadow(UVs, L, vec3(0,0,1), 0.2, 3);
 			
@@ -424,14 +425,14 @@ void main()
 				diffuse_color = texture(test_color_map, UVs).rgb;
 			} else {
 				N = texture2D(back_wall_normal, UVs).rgb* 2 - 1;
-				diffuse_color = texture(back_wall, UVs).rgb;
+				diffuse_color = texture(back_wall_color, UVs).rgb;
 			}
 			shadowFactor = softShadow(UVs, L, vec3(0,0,1), 0.2, 3);
 			
 			
 		} else {
 			// It's a side wall, needs to check if left or right
-			vec2 texcoords = epsilon_camera_pos.zy + left_wall_t * tangent_space_pos.zy;
+			vec2 texcoords = camera_position.zy + left_wall_t * tangent_space_pos.zy;
 			if(is_left_wall != 1){
 			// right wall
 				V = (mat4(1, 0, 0, 0,
@@ -446,7 +447,7 @@ void main()
 					diffuse_color = texture(test_color_map, UVs).rgb;
 				} else {
 					N = texture2D(right_wall_normal, UVs).rgb* 2 - 1;
-					diffuse_color = texture(right_wall, UVs).rgb;
+					diffuse_color = texture(right_wall_color, UVs).rgb;
 				}
 				shadowFactor = softShadow(UVs, L, vec3(0,0,1), 0.1, 2);
 				
@@ -466,7 +467,7 @@ void main()
 					diffuse_color = texture(test_color_map, UVs).rgb;
 				} else {
 					N = texture2D(left_wall_normal, UVs).rgb* 2 - 1;
-					diffuse_color = texture(left_wall, UVs).rgb;
+					diffuse_color = texture(left_wall_color, UVs).rgb;
 				}
 				shadowFactor = softShadow(UVs, L, vec3(0,0,1), 0.1, 1);
 				
