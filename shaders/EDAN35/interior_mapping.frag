@@ -47,9 +47,9 @@ vec2 POM(vec2 texcoords, vec3 N, vec3 V, float heightScale, uint wallIdx) {
 
     // Different amount of depth layers depending on view angle (Optimmization)
     const float minLayers = 2.0;
-    const float maxLayers = 256.0;
+    const float maxLayers = 64.0;
     float numLayers = mix(maxLayers, minLayers, dot(N, V));
-    numLayers = 256;
+    numLayers = 96;
 
     // layerDepth is the depth of every ray step done in the while loop
     float layerDepth = 1.0 / numLayers;
@@ -170,90 +170,74 @@ void main() {
     if (ceiling_t < left_wall_t) {
         if (ceiling_t < back_wall_t) {
             vec2 texcoords = (epsilon_camera_pos.xz + ceiling_t * tangent_space_pos.xz) / FLOOR_HEIGHT;
-            if (texcoords.x > 0.98 || texcoords.y > 0.98) vec2(0.0, 1.0);
-            if (texcoords.x < 0.02 || texcoords.y < -0.98) vec2(0.0, 1.0);
-
             // It's a ceiling
             V = (mat4(0, 0, 1, 0,
                 0, 1, 0, 0,
                 -1, 0, 0, 0,
                 0, 0, 0, 1) * vec4(V, 1.0)).xyz;
             diffuse_color = mix(
-                texture(ceil_wall_color, POM(texcoords, vec3(0, -1, 0), V, 0.1, WALL_CEIL)).rgb,
-                texture(floor_wall_color, texcoords).rgb,
+                texture(ceil_wall_color, POM(texcoords, vec3(0, -1, 0), V, 0.125, WALL_CEIL)).rgb,
+                texture(floor_wall_color, POM(texcoords, vec3(0, 1, 0), V, 0.125, WALL_FLOOR)).rgb,
                 is_floor
             );
             normal = mix(
-                texture(ceil_wall_normal, texcoords).rgb,
-                texture(floor_wall_normal, texcoords).rgb,
+                texture(ceil_wall_normal, POM(texcoords, vec3(0, -1, 0), V, 0.125, WALL_CEIL)).rgb,
+                texture(floor_wall_normal, POM(texcoords, vec3(0, 1, 0), V, 0.125, WALL_FLOOR)).rgb,
                 is_floor
             );
         } else {
             // It's the back wall
             vec2 texcoords = (epsilon_camera_pos.xy + back_wall_t * tangent_space_pos.xy) / FLOOR_HEIGHT;
-            if (texcoords.x < 0.02 || texcoords.y < 0.02) vec2(0.0, 1.0);
-            if (texcoords.x > 0.98 || texcoords.y > 0.98) vec2(0.0, 1.0);
-            diffuse_color = texture(back_wall_color, POM(texcoords, vec3(0, 0, 1), V, 0.5, WALL_BACK)).rgb;
-            normal = texture(back_wall_normal, texcoords).rgb;
+            diffuse_color = texture(back_wall_color, POM(texcoords, vec3(0, 0, 1), V, 0.3, WALL_BACK)).rgb;
+            normal = texture(back_wall_normal, POM(texcoords, vec3(0, 0, 1), V, 0.3, WALL_BACK)).rgb;
         }
     } else {
         if (back_wall_t < left_wall_t) {
             // It's the back wall
-            vec2 texcoords = (epsilon_camera_pos.xy + back_wall_t * tangent_space_pos.xy) / ROOM_SIZE;
-            if (texcoords.x < 0.02 || texcoords.y < 0.02) vec2(0.0, 1.0);
-            if (texcoords.x > 0.98 || texcoords.y > 0.98) vec2(0.0, 1.0);
-
-            diffuse_color = texture(back_wall_color, POM(texcoords, vec3(0, 0, 1), V, 0.5, WALL_BACK)).rgb;
-            normal = texture(back_wall_normal, texcoords).rgb;
+            vec2 texcoords = (epsilon_camera_pos.xy + back_wall_t * tangent_space_pos.xy) / FLOOR_HEIGHT;
+            diffuse_color = texture(back_wall_color, POM(texcoords, vec3(0, 0, 1), V, 0.3, WALL_BACK)).rgb;
+            normal = texture(back_wall_normal, POM(texcoords, vec3(0, 0, 1), V, 0.3, WALL_BACK)).rgb;
         } else {
             // It's a side wall, needs to check if left or right
             vec2 texcoords = (epsilon_camera_pos.zy + left_wall_t * tangent_space_pos.zy) / ROOM_SIZE;
-            if (texcoords.x < -0.98 || texcoords.y < 0.02) vec2(0.0, 1.0);
-            if (texcoords.x > -0.02 || texcoords.y > 0.98) vec2(0.0, 1.0);
-
             if (is_left_wall != 1) {
                 V = (mat4(1, 0, 0, 0,
                     0, 0, 1, 0,
                     0, -1, 0, 0,
                     0, 0, 0, 1) * vec4(V, 1.0)).xyz;
-                diffuse_color = texture(right_wall_color, POM(texcoords, vec3(-1, 0, 0), V, 0.1, WALL_RIGHT)).rgb;
+                diffuse_color = texture(right_wall_color, POM(texcoords, vec3(-1, 0, 0), V, 0.125, WALL_RIGHT)).rgb;
+                normal = texture(right_wall_normal, POM(texcoords, vec3(-1, 0, 0), V, 0.125, WALL_RIGHT)).rgb;
             } else {
                 V = (mat4(1, 0, 0, 0,
                     0, 0, -1, 0,
                     0, -1, 0, 0,
                     0, 0, 0, 1) * vec4(V, 1.0)).xyz;
-
-                diffuse_color = texture(left_wall_color, POM(texcoords, vec3(1, 0, 0), V, 0.1, WALL_LEFT)).rgb;
+                diffuse_color = texture(left_wall_color, POM(texcoords, vec3(1, 0, 0), V, 0.125, WALL_LEFT)).rgb;
+                normal = texture(left_wall_normal, POM(texcoords, vec3(1, 0, 0), V, 0.125, WALL_LEFT)).rgb;
             }
-
-            normal = mix(
-                texture(left_wall_normal, texcoords).rgb,
-                texture(right_wall_normal, texcoords).rgb,
-                is_left_wall
-            );
         }
     }
 
-	float decay = 0.96;
-    float exposure = 0.03;
+    float decay = 0.96;
+    float exposure = 0.06;
     float density = 0.420;
     float weight = 0.38767;
-    int num_samples = 100;
+    int num_samples = 200;
 
-    vec3 rays_color = vec3(0.0, 0.0, 0.0);
-	vec2 tc_step = fs_in.texcoords;
-	vec2 delta_texcoords = vec2(tc_step - normalize(vertex_world_to_clip * vec4(light_position.xyz, 0.0)).xy);
+    vec3 rays_color = vec3(0.2, 0.2, 0.0);
+    vec2 tc_step = fs_in.texcoords;
+    vec2 delta_texcoords = vec2(tc_step - normalize(vertex_world_to_clip * vec4(light_position.xyz, 0.0)).xy);
 
-	delta_texcoords *= (1.0 /  float(num_samples)) * density;
-	float illuminationDecay = 1.0;
-	for(int i=0; i < num_samples ; ++i){
-		tc_step -= delta_texcoords;
-		vec3 sample_step = vec3(1.0, 1.0, 1.0) - texture2D(opacity_map, tc_step).xyz;
-		sample_step *= illuminationDecay * weight;
-		rays_color += sample_step;
-		illuminationDecay *= decay;
-	}
-	rays_color *= exposure;
+    delta_texcoords *= (1.0 / float(num_samples)) * density;
+    float illuminationDecay = 1.0;
+    for (int i = 0; i < num_samples; ++i) {
+        tc_step -= delta_texcoords;
+        vec3 sample_step = vec3(1.0, 1.0, 1.0) - texture2D(opacity_map, tc_step).xyz;
+        sample_step *= illuminationDecay * weight;
+        rays_color += sample_step;
+        illuminationDecay *= decay;
+    }
+    rays_color *= exposure;
 
-    frag_color.xyz = diffuse_color + rays_color;
+    frag_color.xyz = diffuse_color * rays_color;
 }

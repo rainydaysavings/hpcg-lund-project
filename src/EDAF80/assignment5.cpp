@@ -90,7 +90,7 @@ edaf80::Assignment5::run()
 	auto test_color_map = bonobo::loadTexture2D(config::resources_path("project/Parallax_Occlusion_test_Color.png"));
 	auto test_normal_map = bonobo::loadTexture2D(config::resources_path("project/Parallax_Occlusion_test_normal.png"));
 
-	auto wall1_height_map = bonobo::loadTexture2D(config::resources_path("project/wall1/wall1_height.png"));
+	auto wall1_height_map = bonobo::loadTexture2D(config::resources_path("project/wall1/wall1_height2.png"));
 	auto wall1_color_map = bonobo::loadTexture2D(config::resources_path("project/wall1/wall1_albedo.png"));
 	auto wall1_normal_map = bonobo::loadTexture2D(config::resources_path("project/wall1/wall1_normal.png"));
 
