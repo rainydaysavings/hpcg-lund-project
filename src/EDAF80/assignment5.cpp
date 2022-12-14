@@ -133,16 +133,20 @@ edaf80::Assignment5::run()
 
 	// Setting camera and light positions
 	auto camera_position = mCamera.mWorld.GetTranslation();
-	auto light_position = glm::vec3(2.0f, -4.0f, -2.0f);
+	auto light_position = glm::vec3(0.5f, 0.5f, 0.5f);
 	bool use_POM = false;
 	bool use_hard = false;
 	bool use_soft = false;
-	auto const set_uniforms = [&light_position, &camera_position, &use_POM, &use_hard, &use_soft](GLuint program) {
+	bool use_test = false;
+	bool hide_window = false;
+	auto const set_uniforms = [&light_position, &camera_position, &use_POM, &use_hard, &use_soft, &use_test, &hide_window](GLuint program) {
 		glUniform3fv(glGetUniformLocation(program, "light_position"), 1, glm::value_ptr(light_position));
 		glUniform3fv(glGetUniformLocation(program, "camera_position"), 1, glm::value_ptr(camera_position));
 		glUniform1i(glGetUniformLocation(program, "use_POM"), use_POM ? 1 : 0);
 		glUniform1i(glGetUniformLocation(program, "use_hard"), use_hard ? 1 : 0);
 		glUniform1i(glGetUniformLocation(program, "use_soft"), use_soft ? 1 : 0);
+		glUniform1i(glGetUniformLocation(program, "use_test"), use_test ? 1 : 0);
+		glUniform1i(glGetUniformLocation(program, "hide_window"), hide_window ? 1 : 0);
 	};
 
 	// Setting wall geometry, shader and textures
@@ -153,11 +157,7 @@ edaf80::Assignment5::run()
 	wall.add_texture("test_height_map", test_height_map, GL_TEXTURE_2D);
 	wall.add_texture("test_color_map", test_color_map, GL_TEXTURE_2D);
 	wall.add_texture("test_normal_map", test_normal_map, GL_TEXTURE_2D);
-
-	wall.add_texture("height_map", wall3_height_map, GL_TEXTURE_2D);
-	wall.add_texture("color_map",wall3_color_map, GL_TEXTURE_2D);
-	wall.add_texture("normal_map", wall3_normal_map, GL_TEXTURE_2D);
-	wall.add_texture("opacity_map", window_opacity_map, GL_TEXTURE_2D);
+	
 
 	wall.set_program(&interior_mapping_shader, 	set_uniforms);
 	wall.add_texture("back_wall", wall3_color_map, 	GL_TEXTURE_2D);
@@ -178,6 +178,11 @@ edaf80::Assignment5::run()
 	wall.add_texture("floor_wall_normal", floor_normal_map, GL_TEXTURE_2D);
 	wall.add_texture("ceil_wall_normal", ceiling_normal_map, GL_TEXTURE_2D);
 
+	wall.add_texture("window_color", window_color_map, GL_TEXTURE_2D);
+	wall.add_texture("window_height", window_height_map, GL_TEXTURE_2D);
+	wall.add_texture("window_normal", window_normal_map, GL_TEXTURE_2D);
+	wall.add_texture("window_opacity", window_opacity_map, GL_TEXTURE_2D);
+
 
 
 	glm::mat4 wallTransform = wall.get_transform().GetMatrix();
@@ -194,9 +199,9 @@ edaf80::Assignment5::run()
 	bool show_basis = false;
 	float basis_thickness_scale = 0.5f;
 	float basis_length_scale = 1.0f;
-	float lightposX = 0.0f;
-	float lightposY = 0.0f;
-	float lightposZ = 0.0f;
+	float lightposX = 0.5f;
+	float lightposY = 0.5f;
+	float lightposZ = 0.5f;
 	while (!glfwWindowShouldClose(window)) {
 		auto const nowTime = std::chrono::high_resolution_clock::now();
 		auto const deltaTimeUs = std::chrono::duration_cast<std::chrono::microseconds>(nowTime - lastTime);
@@ -261,12 +266,14 @@ edaf80::Assignment5::run()
 			ImGui::Checkbox("Show basis", &show_basis);
 			//ImGui::SliderFloat("Basis thickness scale", &basis_thickness_scale, 0.0f, 100.0f);
 			//ImGui::SliderFloat("Basis length scale", &basis_length_scale, 0.0f, 100.0f);
-			ImGui::SliderFloat("lightposX", &lightposX, 0.0f, 10.0f);
-			ImGui::SliderFloat("lightposY", &lightposY, 0.0f, 10.0f);
-			ImGui::SliderFloat("lightposZ", &lightposZ, 0.0f, 10.0f);
+			ImGui::SliderFloat("lightposX", &lightposX, 0.0f, 1.0f);
+			ImGui::SliderFloat("lightposY", &lightposY, 0.0f, 1.0f);
+			ImGui::SliderFloat("lightposZ", &lightposZ, 0.0f, 5.0f);
 			ImGui::Checkbox("Use Parallax Occlusion Mapping", &use_POM);
-			ImGui::Checkbox("Use Hard Shadows", &use_hard);
+			//ImGui::Checkbox("Use Hard Shadows", &use_hard);
 			ImGui::Checkbox("Use Soft Shadows", &use_soft);
+			ImGui::Checkbox("Use test textures", &use_test);
+			ImGui::Checkbox("Hide window", &hide_window);
 
 		}
 		ImGui::End();
