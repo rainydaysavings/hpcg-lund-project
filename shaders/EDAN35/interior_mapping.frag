@@ -63,7 +63,6 @@ float softShadow(vec2 UVs, vec3 L, vec3 N, float heightScale, int wallIdx){
 		float shadowLayerDepth = 1.0/shadowNumLayers;
 		float startDepth = 0;
 
-
 		if(use_test){
 			startDepth = 1.0 - texture2D(test_height_map, UVs).r;
 		} else {
@@ -100,13 +99,8 @@ float softShadow(vec2 UVs, vec3 L, vec3 N, float heightScale, int wallIdx){
 		float maxOcclusion = 0;
 		// variable maxOcclusionDepth is the depth of that point of occlusion
 		float maxOcclusionDepth = startDepth;
-		//if(dot(N,L) > 0){
-			// loop until ray escapes surface
 			while(currentLayerDepth > 0){
 				tempUVs -= deltaUVs;
-//				if(tempUVs.x > 1.0 || tempUVs.y > 1.0 || tempUVs.x < 0.0 || tempUVs.y < 0.0){
-//					break;
-//				}
 				float occlusionDepth = 1.0;
 				if(use_test){
 					occlusionDepth = 1.0 - texture2D(test_height_map, tempUVs).r;
@@ -142,10 +136,6 @@ float softShadow(vec2 UVs, vec3 L, vec3 N, float heightScale, int wallIdx){
 				shadowFactor = max(min(1-penumbraWidth/(0.24+penumbraWidth), 1.0), 0.0);
 				//shadowFactor = max(min(pow(startDepth-(maxOcclusionDepth+1), 2.0), 1.0), 0.0);
 			}
-		//}
-		
-
-
 	return shadowFactor;
 }
 
@@ -163,13 +153,11 @@ vec2 POM(vec2 texcoords, vec3 N, vec3 V, float heightScale, int wallIdx){
 	if(!use_POM){
 		return texcoords;
 	}
-
-
 	// Different amount of depth layers depending on view angle (Optimmization)
 	const float minLayers = 8.0;
 	const float maxLayers = 64.0;
 	float numLayers = mix(maxLayers, minLayers, dot(N,V));
-	numLayers = 128;
+	numLayers = 256;
 
 	// layerDepth is the depth of every ray step done in the while loop
 	float layerDepth = 1.0/numLayers;
@@ -236,7 +224,6 @@ vec2 POM(vec2 texcoords, vec3 N, vec3 V, float heightScale, int wallIdx){
 	//			break;
 			}
 		}
-
 		currentLayerDepth += layerDepth;
 	}
 
@@ -292,18 +279,12 @@ void main()
 	vec3 L = vec3(1.0, 0.0, 0.0);
 
 	if(!hide_window){
-
-
 		vec3 dirLight = normalize(vec3(0, 20, 10));
 		UVs = POM(fs_in.texcoords, vec3(0,0,1), V, 0.2, 0);
 		if(UVs.x > 1.0 || UVs.y > 1.0 || UVs.x < 0.0 || UVs.y < 0.0){
 			discard;
 			return;
 		}
-
-
-
-
 		// Does it hit window wall?
 		if(texture2D(window_opacity, UVs).r > 0.1){
 
@@ -314,9 +295,6 @@ void main()
 			shadowFactor = softShadow(UVs, dirLight, vec3(0,0,1), 0.2, 0);
 
 			frag_color.rgb = windowColor + windowAmbient * pow(shadowFactor, 10);
-
-
-
 
 			return;
 		}
@@ -353,13 +331,11 @@ void main()
 					  0, 1, 0, 0,
 					  -1, 0, 0, 0,
 					  0, 0, 0, 1)*vec4(V, 1.0)).xyz;
-			
 			if(is_floor != 1){
 				UVs = POM(texcoords / FLOOR_HEIGHT, vec3(0,-1,0), V, 0.1, 4);
 				// adapt light coordiates to different wall orientations
 				lp = vec3(lp.x, lp.z - 1.0, 1.0-lp.y);
-				L = lp - vec3(UVs, initialDepth);
-
+				L = lp - vec3(UVs, -initialDepth);
 				if(use_test){
 					N = texture2D(test_normal_map, UVs).rgb* 2 - 1;
 					diffuse_color = texture(test_color_map, UVs).rgb;
@@ -368,8 +344,6 @@ void main()
 					diffuse_color = texture(ceil_wall_color, UVs).rgb;
 				}
 				shadowFactor = softShadow(UVs, L, vec3(0,0,1), 0.1, 4);
-				
-				
 			} else {
 				// It's the floor
 				if(use_test){
@@ -378,8 +352,8 @@ void main()
 							  0, 0, -1, 0,
 							  0, 0, 0, 1)*vec4(V, 1.0)).xyz;
 					UVs = POM(texcoords / FLOOR_HEIGHT, vec3(0,1,0), V, 0.1, 4);
-					lp = vec3(lp.x, lp.z - 2.5, lp.y);
-					L = lp - vec3(UVs, initialDepth);
+					lp = vec3(lp.x, lp.z - 1.0, lp.y);
+					L = lp - vec3(UVs, -initialDepth);
 					N = texture2D(test_normal_map, UVs).rgb* 2 - 1;
 					diffuse_color = texture(test_color_map, UVs).rgb;
 					shadowFactor = softShadow(UVs, L, vec3(0,0,1), 0.1, 4);
@@ -393,15 +367,12 @@ void main()
 							  0, 0, 0, 1)*vec4(N, 1.0)).xyz;
 				}
 			}
-
 		} else {
 			// It's the back wall
-			
 			vec2 texcoords = camera_position.xy + back_wall_t * tangent_space_pos.xy;
 			UVs = POM(texcoords / ROOM_SIZE, vec3(0,0,1), V, 0.3, 3);
 			lp = vec3(lp.x, lp.y, lp.z);
 			L = lp - vec3(UVs, -initialDepth);
-
 			if(use_test){
 				N = texture2D(test_normal_map, UVs).rgb* 2 - 1;
 				diffuse_color = texture(test_color_map, UVs).rgb;
@@ -410,8 +381,6 @@ void main()
 				diffuse_color = texture(back_wall_color, UVs).rgb;
 			}
 			shadowFactor = softShadow(UVs, L, vec3(0,0,1), 0.2, 3);
-			
-			
 		}
 	} else {
 		if (back_wall_t < left_wall_t) {
@@ -419,7 +388,7 @@ void main()
 			vec2 texcoords = camera_position.xy + back_wall_t * tangent_space_pos.xy;
 			UVs = POM(texcoords / ROOM_SIZE, vec3(0,0,1), V, 0.3, 3);
 			lp = vec3(lp.x, lp.y, lp.z);
-			L = lp - vec3(UVs, initialDepth);
+			L = lp - vec3(UVs, -initialDepth);
 			if(use_test){
 				N = texture2D(test_normal_map, UVs).rgb* 2 - 1;
 				diffuse_color = texture(test_color_map, UVs).rgb;
@@ -428,7 +397,6 @@ void main()
 				diffuse_color = texture(back_wall_color, UVs).rgb;
 			}
 			shadowFactor = softShadow(UVs, L, vec3(0,0,1), 0.2, 3);
-			
 			
 		} else {
 			// It's a side wall, needs to check if left or right
@@ -441,7 +409,7 @@ void main()
 						  0, 0, 0, 1)*vec4(V, 1.0)).xyz;
 				UVs = POM(texcoords / ROOM_SIZE, vec3(-1,0,0), V, 0.1, 2);
 				lp = vec3(lp.z - 1.0, lp.y, 1.0 - lp.x);
-				L = lp - vec3(UVs, initialDepth);
+				L = lp - vec3(UVs, -initialDepth);
 				if(use_test){
 					N = texture2D(test_normal_map, UVs).rgb* 2 - 1;
 					diffuse_color = texture(test_color_map, UVs).rgb;
@@ -450,8 +418,6 @@ void main()
 					diffuse_color = texture(right_wall_color, UVs).rgb;
 				}
 				shadowFactor = softShadow(UVs, L, vec3(0,0,1), 0.1, 2);
-				
-				
 
 			} else {
 			// left wall
@@ -461,7 +427,7 @@ void main()
 						  0, 0, 0, 1)*vec4(V, 1.0)).xyz;
 				UVs = POM(texcoords / ROOM_SIZE, vec3(1,0,0), V, 0.1, 1);
 				lp = vec3(lp.z - 1.0, lp.y, lp.x);
-				L = lp - vec3(UVs, initialDepth);
+				L = lp - vec3(UVs, -initialDepth);
 				if(use_test){
 					N = texture2D(test_normal_map, UVs).rgb* 2 - 1;
 					diffuse_color = texture(test_color_map, UVs).rgb;
@@ -470,7 +436,6 @@ void main()
 					diffuse_color = texture(left_wall_color, UVs).rgb;
 				}
 				shadowFactor = softShadow(UVs, L, vec3(0,0,1), 0.1, 1);
-				
 
 			}
 		}
@@ -478,7 +443,6 @@ void main()
 	
 	L = normalize(L);
 	vec3 diffuse = max(dot(L,normalize(N)), 0.0) * diffuse_color;
-
 
 	shadowFactor = shadowFactor * shadowFactor; 
 	frag_color.xyz = diffuse * shadowFactor;
