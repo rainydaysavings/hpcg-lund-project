@@ -138,8 +138,9 @@ edaf80::Assignment5::run()
 	bool use_hard = false;
 	bool use_soft = false;
 	bool use_test = false;
+	bool use_light_scatter = false;
 	bool hide_window = false;
-	auto const set_uniforms = [&light_position, &camera_position, &use_POM, &use_hard, &use_soft, &use_test, &hide_window](GLuint program) {
+	auto const set_uniforms = [&light_position, &camera_position, &use_POM, &use_hard, &use_soft, &use_test, &hide_window, &use_light_scatter](GLuint program) {
 		glUniform3fv(glGetUniformLocation(program, "light_position"), 1, glm::value_ptr(light_position));
 		glUniform3fv(glGetUniformLocation(program, "camera_position"), 1, glm::value_ptr(camera_position));
 		glUniform1i(glGetUniformLocation(program, "use_POM"), use_POM ? 1 : 0);
@@ -147,6 +148,7 @@ edaf80::Assignment5::run()
 		glUniform1i(glGetUniformLocation(program, "use_soft"), use_soft ? 1 : 0);
 		glUniform1i(glGetUniformLocation(program, "use_test"), use_test ? 1 : 0);
 		glUniform1i(glGetUniformLocation(program, "hide_window"), hide_window ? 1 : 0);
+		glUniform1i(glGetUniformLocation(program, "use_light_scatter"), use_light_scatter ? 1 : 0);
 	};
 
 	// Setting wall geometry, shader and textures
@@ -157,7 +159,7 @@ edaf80::Assignment5::run()
 	wall.add_texture("test_height_map", test_height_map, GL_TEXTURE_2D);
 	wall.add_texture("test_color_map", test_color_map, GL_TEXTURE_2D);
 	wall.add_texture("test_normal_map", test_normal_map, GL_TEXTURE_2D);
-	
+
 
 	wall.set_program(&interior_mapping_shader, 	set_uniforms);
 	wall.add_texture("back_wall_color", wall3_color_map, 	GL_TEXTURE_2D);
@@ -189,14 +191,16 @@ edaf80::Assignment5::run()
 	wallTransform = glm::rotate(wallTransform, -glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
 	glClearDepthf(1.0f);
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
+	glLineWidth(5);
 
 	auto lastTime = std::chrono::high_resolution_clock::now();
 	bool show_logs = true;
 	bool show_gui = true;
 	bool shader_reload_failed = false;
 	bool show_basis = false;
+	bool show_wireframe = false;
 	float basis_thickness_scale = 0.5f;
 	float basis_length_scale = 1.0f;
 	float lightposX = 0.5f;
@@ -228,6 +232,8 @@ edaf80::Assignment5::run()
 			show_gui = !show_gui;
 		if (inputHandler.GetKeycodeState(GLFW_KEY_F11) & JUST_RELEASED)
 			mWindowManager.ToggleFullscreenStatusForWindow(window);
+		if (inputHandler.GetKeycodeState(GLFW_KEY_F4) & JUST_RELEASED)
+			show_wireframe = show_wireframe ? false : true;
 
 		// Retrieve the actual framebuffer size: for HiDPI monitors,
 		// you might end up with a framebuffer larger than what you
@@ -255,7 +261,8 @@ edaf80::Assignment5::run()
 			wall.render(mCamera.GetWorldToClipMatrix(), wallTransform);
 		}
 
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		if(show_wireframe) glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+		else glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
 		//
 		// Todo: If you want a custom ImGUI window, you can set it up
@@ -274,7 +281,7 @@ edaf80::Assignment5::run()
 			ImGui::Checkbox("Use Soft Shadows", &use_soft);
 			ImGui::Checkbox("Use test textures", &use_test);
 			ImGui::Checkbox("Hide window", &hide_window);
-
+			ImGui::Checkbox("Use light scatter", &use_light_scatter);
 		}
 		ImGui::End();
 		if (show_basis)

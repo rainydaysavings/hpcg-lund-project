@@ -38,6 +38,7 @@ uniform bool use_test;
 uniform bool use_soft;
 uniform bool hide_window;
 uniform bool use_POM;
+uniform bool use_light_scatter;
 
 const float FLOOR_HEIGHT = 5.0;
 const float ROOM_SIZE = 5.0;
@@ -284,34 +285,37 @@ void main() {
         }
         // Does it hit window wall?
         if (texture2D(window_opacity, UVs).r > 0.1) {
-            float decay = 0.96;
-            float exposure = 0.22;
-            float density = 0.620;
-            float weight = 0.48767;
-            int num_samples = 200;
-            vec3 rays_color = vec3(0.83, 0.78, 0.72);
             vec2 tc_step = UVs;
             vec2 delta_texcoords = vec2(tc_step - normalize(vertex_world_to_clip * vec4(inverse(fs_in.TBN) * light_position.xyz, 0.0)).xy);
+            vec3 windowDiffuse = texture2D(window_color, UVs).rgb;
 
-            //HEREEEEEEEEEEEEEEEE
+			// We're to use the window's light scattering effect
+			if (use_light_scatter) {
+				float decay = 0.96;
+				float exposure = 0.22;
+				float density = 0.620;
+				float weight = 0.48767;
+				int num_samples = 200;
+				vec3 rays_color = vec3(0.83, 0.78, 0.72);
+				delta_texcoords *= (1.0 / float(num_samples)) * density;
+				float illuminationDecay = 1.0;
 
-            delta_texcoords *= (1.0 / float(num_samples)) * density;
-            float illuminationDecay = 1.0;
-            for (int i = 0; i < num_samples; ++i) {
-                tc_step -= delta_texcoords;
-                vec3 sample_step = vec3(1.0, 1.0, 1.0) - texture2D(window_opacity, tc_step).xyz;
-                sample_step *= illuminationDecay * weight;
-                rays_color += sample_step;
-                illuminationDecay *= decay;
-            }
-            rays_color *= exposure;
+				for (int i = 0; i < num_samples; ++i) {
+					tc_step -= delta_texcoords;
+					vec3 sample_step = vec3(1.0, 1.0, 1.0) - texture2D(window_opacity, tc_step).xyz;
+					sample_step *= illuminationDecay * weight;
+					rays_color += sample_step;
+					illuminationDecay *= decay;
+				}
+
+				rays_color *= exposure;
+				windowDiffuse *= rays_color;
+			}
 
             N = texture2D(window_normal, UVs).rgb * 2 - 1;
-            vec3 windowDiffuse = texture2D(window_color, UVs).rgb * rays_color;
             vec3 windowAmbient = windowDiffuse * 0.2;
             vec3 windowColor = max(dot(dirLight, normalize(N)), 0.0) * windowDiffuse;
             shadowFactor = softShadow(UVs, dirLight, vec3(0, 0, 1), 0.2, 0);
-
             frag_color.rgb = windowColor + windowAmbient * pow(shadowFactor, 10);
 
             return;
