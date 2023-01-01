@@ -36,7 +36,7 @@ void main()
 	vec3 L = inverse(fs_in.TBN) * normalize(lp-fs_in.frag_pos);
 
 
-	
+
 	vec3 N = fs_in.TBN[2];
 	vec3 V = inverse(fs_in.TBN) * normalize(camera_position-fs_in.frag_pos);
 
@@ -61,7 +61,7 @@ void main()
 		// deltaUVs is the value added to the texture coordinates every step in the while loop
 		vec2 deltaUVs = S / numLayers;
 
-		
+
 
 		// read surface texcoord texel depth. Depth is the inverse of height
 		float currentDepthMapValue = 1.0 - texture2D(height_map, UVs).r;
@@ -89,9 +89,9 @@ void main()
 //			discard;
 //			return;
 //		}
-	
-	
-	
+
+
+
 	// Self shadowing
 		// shadow layer resolution independent from POM layer resolution. Determined by distance from camera and angle to lightsource
 		float shadowNumLayers = mix(16.0, 180.0, 1-length(camera_position-fs_in.frag_pos)/(3+length(camera_position-fs_in.frag_pos)));
@@ -102,11 +102,11 @@ void main()
 		float initialDepth = 1.0 - texture2D(height_map, UVs).r;
 		L = L + N*initialDepth;
 		vec2 lightStep = ( L.yx / L.z ) * heightScale;
-		
+
 		currentLayerDepth = initialDepth;
 		deltaUVs = lightStep / (shadowNumLayers *currentLayerDepth);
 		vec2 tempUVs = UVs;
-		
+
 
 		if(use_hard){
 			// Hard self shadowing
@@ -127,8 +127,8 @@ void main()
 
 
 		if(use_soft){
-			// Soft self shadowing 
-	
+			// Soft self shadowing
+
 			// variable maxOcclusion is the size of the largest occlusion encountered on the ray to the light source
 			float maxOcclusion = 0;
 			// variable maxOcclusionDepth is the depth of that point of occlusion
@@ -181,7 +181,7 @@ void main()
 	float shininess = 2.0;
 	vec3 specular = specColor * pow(max(dot(R,-V), 0.0), shininess);
 
-	
+
 	frag_color = vec4(diffuse + specular, 1.0);
 	//frag_color = vec4(N,1.0);
 	}
